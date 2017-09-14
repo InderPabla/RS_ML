@@ -40,59 +40,84 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     Robot robot;
     
     BufferedImage cap;
+
     
-    Rectangle captureRect = new Rectangle(105,47,725,460);
+    MacroPlayer macroPlayer = null;
+    
+    
+    Rectangle captureRect;
+ 
+    Point enemyPosition,weaponPosition,inventoryIndexRect;
     
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
+    	macroPlayer.macroTick();
     }
     
-    public void paint(Graphics g)  
-    { 
+    public Point getEnemyPosition() {
+    	return null;
+    }
+    
+    public Point getFoodPosition() {
+    	return null;
+    }
+    
+    public Point getWeaponPosition() {
+    	return inventoryIndexRect;
+    }
+    
+    public void paint(Graphics g) { 
     	 bufferGraphics.setColor(Color.BLACK);
     	 bufferGraphics.fillRect(0,0,dim.width,dim.height);
          tick();
          g.drawImage(offscreen,0,0,this); 
     }
-       
-    public void init()  
-    { 
-    	 new Thread(this).start();
-    	 font = new Font ("Monospaced", Font.BOLD , 14);
-    	 
-         dim = new Dimension(900,900); 
-         this.setSize(dim);
-         this.resize(dim);
+    
+    public void initilizePosition() {
+    	captureRect = new Rectangle(105,47,725,460);
+    	inventoryIndexRect = new Point(578,225);
+    }
+    
+    public void init()   { 
+    	initilizePosition();
+    	
+    	new Thread(this).start();
+	    font = new Font ("Monospaced", Font.BOLD , 14);
+	    	 
+        dim = new Dimension(900,900); 
+        this.setSize(dim);
+        this.resize(dim);
          
-         setBackground(Color.black); 
+        setBackground(Color.black); 
 
-         offscreen = createImage(dim.width,dim.height); 
+        offscreen = createImage(dim.width,dim.height); 
 
-         bufferGraphics = offscreen.getGraphics(); 
-          try {
-			robot = new Robot();
-		} catch (AWTException e) {
-			// TODO Auto-generated catch block
+        bufferGraphics = offscreen.getGraphics(); 
+        try {
+        	robot = new Robot();
+        	macroPlayer = new MacroPlayer(robot,this);
+		} 
+        catch (AWTException e) {
 			e.printStackTrace();
 		}
-          
-          try {
-              GlobalScreen.registerNativeHook();
-          }
-          catch (NativeHookException ex) {
-              System.err.println("There was a problem registering the native hook.");
-              System.err.println(ex.getMessage());
+      
+        try {
+        	GlobalScreen.registerNativeHook();
+        }
+        catch (NativeHookException ex) {
+        	System.err.println("There was a problem registering the native hook.");
+        	System.err.println(ex.getMessage());
 
-              System.exit(1);
-          }
+        	System.exit(1);
+        }
 
-          GlobalScreen.addNativeKeyListener(this);  
-         
-          Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
-          logger.setLevel(Level.OFF);
+        GlobalScreen.addNativeKeyListener(this);  
+     
+        Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+        logger.setLevel(Level.OFF);
 
-          // Don't forget to disable the parent handlers.
-          logger.setUseParentHandlers(false);
+        // Don't forget to disable the parent handlers.
+        logger.setUseParentHandlers(false);
     }
     
    
@@ -144,25 +169,19 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 	public void nativeKeyReleased(NativeKeyEvent e) {
 		 System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
 		
-		
 		 if(e.getKeyCode() == NativeKeyEvent.VC_Z) {
 			 action = OutputAction.EAT;
+			 macroPlayer.clearMacroTask();
+			 macroPlayer.appendEatMacro();
 		 }
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_X) {
 			 action = OutputAction.COMBO;
+			 macroPlayer.clearMacroTask();
+			 macroPlayer.appenComboMacro();
 		 }
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_SPACE) {
 			 action = OutputAction.NONE;
 		 }
-	}
-	
-	void sleep(int time) {
-		try {
-			Thread.sleep(time);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 	}
 
 
