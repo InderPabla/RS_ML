@@ -13,10 +13,27 @@ public class MacroPlayer {
 	public void macroTick() {
 		if(currentTask!=null) {
 			if(currentTask.isMacroPlay() == true) {
-				MacroAction action = currentTask.getAction();
+				//do something with action
+				applyAction(currentTask.getAction());
+				//do something with action
+				
+				
 				currentTask = null;
+				macroTaskList.remove(0);
+				if(macroTaskList!=null && macroTaskList.size()>0) {
+					currentTask = macroTaskList.get(0);
+				}
 			}
 		}
+		else {
+			if(macroTaskList!=null && macroTaskList.size()>0) {
+				currentTask = macroTaskList.get(0);
+			}
+		}
+	}
+	
+	public void applyAction(MacroAction action) {
+		
 	}
 	
 	public void clearMacroTask() {
@@ -40,7 +57,9 @@ public class MacroPlayer {
 	}
 	
 	public void appendEatMacro() {
-		
+		macroTaskList.add(new MacroTask(0,MacroAction.MOVE));
+		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
 	}
 
 }
