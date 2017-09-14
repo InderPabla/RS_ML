@@ -26,28 +26,24 @@ import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
 public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
-	
-	
-	OutputAction action;
-	
-	int waitTime = 25;
-	Font font;
-	
-    Graphics bufferGraphics; 
-    Image offscreen; 
+
+	Dimension dim = null; 
+	BufferedImage cap = null;
+    Graphics bufferGraphics = null; 
+    Image offscreen = null; 
+    Font font = null;
     
-    Dimension dim; 
+    OutputAction action = null;
+    MacroPlayer macroPlayer = null;
     Robot robot;
     
-    BufferedImage cap;
-
+    Rectangle captureRect = null;
+    Point enemyPosition = null;
+    Point weaponPosition = null;
+    Point inventoryIndex = null;
     
-    MacroPlayer macroPlayer = null;
-    
-    
-    Rectangle captureRect;
- 
-    Point enemyPosition,weaponPosition,inventoryIndexRect;
+    int waitTime = 25;
+    int ignoreInventorySlots = 3;
     
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
@@ -55,15 +51,48 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     }
     
     public Point getEnemyPosition() {
-    	return null;
+    	return new Point(enemyPosition.x+captureRect.x,enemyPosition.y+captureRect.y);
     }
     
     public Point getFoodPosition() {
+    	int counter = 0;
+		Point foundPoint = null;
+		for(int i =0; i <7;i++) {
+    		 for(int j =0; j <4;j++) {
+    			 counter++;
+    			 if(counter >ignoreInventorySlots) {
+	    			 int x = inventoryIndex.x+(j*41);
+	    			 int y =(int)(inventoryIndex.y+(i*36f));
+	    			 int intColor =cap.getRGB(x, y);
+	    			 int red = (intColor>>16)&0xFF;
+		        	 int green = (intColor>>8)&0xFF;
+		        	 int blue = (intColor>>0)&0xFF;
+		        	 float[] hsb = new float[3];
+		        	 Color.RGBtoHSB(red, green, blue, hsb);
+		        	 
+		        	 if(Math.abs(20f-(hsb[0]*239f))>2) {
+		        		 foundPoint = new Point(x,y);
+		        		 break;
+		        	 }
+    			 }
+    		 }
+    		 
+    		 if(foundPoint!=null)
+    			 break;
+		}
+		
+		
+		if(foundPoint!=null) {
+			foundPoint.x+=captureRect.x;
+			foundPoint.y+=captureRect.y;
+			return foundPoint;
+		}
+		
     	return null;
     }
     
     public Point getWeaponPosition() {
-    	return inventoryIndexRect;
+    	return new Point(inventoryIndex.x+captureRect.x,inventoryIndex.y+captureRect.y);
     }
     
     public void paint(Graphics g) { 
@@ -74,8 +103,9 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     }
     
     public void initilizePosition() {
-    	captureRect = new Rectangle(105,47,725,460);
-    	inventoryIndexRect = new Point(578,225);
+    	captureRect    = new Rectangle(105,47,725,460);
+    	inventoryIndex = new Point(578,225);
+    	enemyPosition  = new Point(213,167);
     }
     
     public void init()   { 

@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Robot;
 import java.awt.event.MouseEvent;
