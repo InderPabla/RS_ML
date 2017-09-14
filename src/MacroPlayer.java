@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class MacroPlayer {
 
 	private ArrayList<MacroTask> macroTaskList;
+	
 	public MacroTask currentTask = null;
 	public Robot robot;
 	private RS_ML_v2 view;
@@ -42,6 +43,7 @@ public class MacroPlayer {
 	}
 	
 	public void applyAction(MacroAction action) {
+		System.out.println("Doing "+action);
 		if(action==MacroAction.PRESS) {
 			robot.mousePress(MouseEvent.BUTTON1_MASK);
 		}

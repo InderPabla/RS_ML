@@ -27,20 +27,20 @@ import org.jnativehook.keyboard.NativeKeyListener;
 
 public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 
-	Dimension dim = null; 
-	BufferedImage cap = null;
+	Dimension dim           = null; 
+	BufferedImage cap       = null;
     Graphics bufferGraphics = null; 
-    Image offscreen = null; 
-    Font font = null;
+    Image offscreen         = null; 
+    Font font               = null;
     
-    OutputAction action = null;
+    OutputAction action     = null;
     MacroPlayer macroPlayer = null;
-    Robot robot;
+    Robot robot             = null;
     
     Rectangle captureRect = null;
-    Point enemyPosition = null;
-    Point weaponPosition = null;
-    Point inventoryIndex = null;
+    Point enemyPosition   = null;
+    Point weaponPosition  = null;
+    Point inventoryIndex  = null;
     
     int waitTime = 25;
     int ignoreInventorySlots = 3;
@@ -55,8 +55,10 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     }
     
     public Point getFoodPosition() {
-    	int counter = 0;
+    	int counter      = 0;
 		Point foundPoint = null;
+		
+		//Iterate through 28 inventory slots
 		for(int i =0; i <7;i++) {
     		 for(int j =0; j <4;j++) {
     			 counter++;
@@ -181,7 +183,7 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 	@Override
 	public void nativeKeyPressed(NativeKeyEvent e) {
 		// TODO Auto-generated method stub
-		 System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
+		 //System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
 
 	        if (e.getKeyCode() == NativeKeyEvent.VC_ESCAPE) {
 	            try {
@@ -210,7 +212,8 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 			 macroPlayer.appenComboMacro();
 		 }
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_SPACE) {
-			 action = OutputAction.NONE;
+			 enemyPosition.x = MouseInfo.getPointerInfo().getLocation().x - captureRect.x;
+			 enemyPosition.y = MouseInfo.getPointerInfo().getLocation().y - captureRect.y;
 		 }
 	}
 

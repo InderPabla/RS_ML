@@ -19,7 +19,7 @@ public class MacroTask {
 	//Macro becomes the current macro
 	public void activateMacro() {
 		activateMacro = true;
-		macroEndTime = System.currentTimeMillis();
+		macroEndTime = System.currentTimeMillis()+taskWait;
 	}
 	
 	//macro tick
