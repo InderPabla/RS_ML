@@ -11,14 +11,17 @@ public class MacroPlayer {
 	public MacroTask currentTask = null;
 	public Robot robot;
 	private RS_ML_v2 view;
-	
+	private float progressValue = 0;
+	private long macroStartTime = 0;
+	private float maxTime;
+	public  boolean isMacroRunning = false;
 	public MacroPlayer(Robot robot, RS_ML_v2 view) {
 		this.robot = robot;
 		this.view = view;
 		macroTaskList = new ArrayList<MacroTask>();
 	}
 	
-	public void macroTick() {
+	public float macroTick() {
 		if(currentTask!=null) {
 			if(currentTask.isMacroPlay() == true) {
 				//apply current task
@@ -32,6 +35,10 @@ public class MacroPlayer {
 					currentTask.activateMacro();
 				}
 			}
+			progressValue = (float)(System.currentTimeMillis()-macroStartTime)/maxTime;
+			progressValue = progressValue<=1f?progressValue:1f;
+			
+			return progressValue; 
 		}
 		else {
 			//get new task in available
@@ -39,11 +46,16 @@ public class MacroPlayer {
 				currentTask = macroTaskList.get(0);
 				currentTask.activateMacro();
 			}
+			else {
+				isMacroRunning = false;
+			}
 		}
+		
+		return -1;
 	}
 	
 	public void applyAction(MacroAction action) {
-		System.out.println("Doing "+action);
+		//System.out.println("Doing "+action);
 		if(action==MacroAction.PRESS) {
 			robot.mousePress(MouseEvent.BUTTON1_MASK);
 		}
@@ -67,12 +79,16 @@ public class MacroPlayer {
 		}
 	}
 	
-	public void clearMacroTask() {
+	private void clearMacroTask() {
+		macroStartTime = System.currentTimeMillis();
+		progressValue = 0;
 		macroTaskList = new ArrayList<MacroTask>();
 		currentTask = null;
 	}
 	
-	public void appenComboMacro() {
+	public void appendComboMacro() {
+		clearMacroTask();
+		maxTime = 1650f+100f;
 		macroTaskList.add(new MacroTask(0,MacroAction.MOVE_TO_WEAPON));
 		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
@@ -85,12 +101,18 @@ public class MacroPlayer {
 		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_ENEMY));
 		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
+		isMacroRunning = true;
 	}
 	
 	public void appendEatMacro() {
+		clearMacroTask();
+		maxTime = 410f +100f;
+		
 		macroTaskList.add(new MacroTask(0,MacroAction.MOVE_TO_FOOD));
 		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(400,MacroAction.NONE));
+		isMacroRunning = true;
 	}
 
 }

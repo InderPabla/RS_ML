@@ -55,6 +55,7 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     float playerHealth     = -1f;
     float bowResetValue    = -1f;
     float bowResetSubtract = 0.025f;
+    float macroTickValue   = -1f;
     
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
@@ -63,10 +64,32 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     	getEnemyHealth();
     	getPlayerHealth();
     	bowResetValue();
+    	macroTickValue = macroPlayer.macroTick();
     	
+    	if(macroPlayer.isMacroRunning == false) {
+    		action = OutputAction.NONE;
+    	}
+    	
+    	createTickData();
+    	//System.out.println(action+" "+macroTickValue);
     	visualRenderer();
+    }
+    
+    public void createTickData() {
+    	float eatValue = -1;
+    	float comboValue = -1;
+    	float isMacroing = macroPlayer.isMacroRunning == true?1f:-1f;
+    	if(action==OutputAction.COMBO) {
+    		comboValue = macroTickValue;
+    	}
+    	else if(action==OutputAction.EAT) {
+    		eatValue = macroTickValue;
+    	}
     	
-    	macroPlayer.macroTick();
+    	if(enemyHealth>=0) {
+	    	System.out.println("Inputs: "+eatValue+" "+comboValue+" "+isMacroing+" "+enemyHealth+" "+playerHealth+" "+bowResetValue);
+	    	System.out.println("Outputs: "+action);
+    	}
     }
     
     public void visualRenderer() {
@@ -93,9 +116,12 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
         		bufferGraphics.setColor(new Color(bowResetValue,1f-bowResetValue,1f-bowResetValue));
         		bufferGraphics.fillRect(0,captureRect.height,(int)(captureRect.width*bowResetValue), 25);
         	}
-        	else {
-        		 
+        	
+        	if(macroTickValue>=0) {
+        		bufferGraphics.setColor(new Color(macroTickValue,1f-macroTickValue,1f-macroTickValue));
+        		bufferGraphics.fillRect(0,captureRect.height+25,(int)(captureRect.width*macroTickValue), 25);
         	}
+
     	}
     }
     
@@ -207,8 +233,10 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 	       	hsb[1] = 1f;
 	       	hsb[2] = 0.5f;
 	       	if(hsb[0]>=0.25 && hsb[0]<=0.375) {
-	       		if(redCount>=1)
-	       			return -1f;
+	       		if(redCount>=1){
+		       		this.enemyHealth = -1f;
+		       		return -1f;
+		       	}
 	       			
 	       		greenCount++;
 	       	}
@@ -216,12 +244,16 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 	       		redCount++;
 	       	}
 	       	else if(hsb[0]>=0.0625 && hsb[0]<=0.0625+0.0625) {
-	       		if(redCount>=1)
-	       			return-1f;
+	       		if(redCount>=1){
+		       		this.enemyHealth = -1f;
+		       		return -1f;
+		       	}
 	       		orangeCount++;
 	       	}
-	       	else 
+	       	else {
+	       		this.enemyHealth = -1f;
 	       		return -1f;
+	       	}
         }
         
         
@@ -387,17 +419,15 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 
 	@Override
 	public void nativeKeyReleased(NativeKeyEvent e) {
-		 System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
+		 //System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
 		
 		 if(e.getKeyCode() == NativeKeyEvent.VC_Z) {
 			 action = OutputAction.EAT;
-			 macroPlayer.clearMacroTask();
 			 macroPlayer.appendEatMacro();
 		 }
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_X) {
 			 action = OutputAction.COMBO;
-			 macroPlayer.clearMacroTask();
-			 macroPlayer.appenComboMacro();
+			 macroPlayer.appendComboMacro();
 		 }
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_SPACE) {
 			 enemyPosition.x = MouseInfo.getPointerInfo().getLocation().x - captureRect.x;
