@@ -74,15 +74,15 @@ public class MacroPlayer {
 	
 	public void appenComboMacro() {
 		macroTaskList.add(new MacroTask(0,MacroAction.MOVE_TO_WEAPON));
-		macroTaskList.add(new MacroTask(10,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(10,MacroAction.MOVE_TO_ENEMY));
-		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_ENEMY));
+		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
 		macroTaskList.add(new MacroTask(1600,MacroAction.MOVE_TO_WEAPON));
-		macroTaskList.add(new MacroTask(10,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(20,MacroAction.MOVE_TO_ENEMY));
+		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_ENEMY));
 		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
 	}
