@@ -53,7 +53,7 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     
     float enemyHealth      = -1f;
     float playerHealth     = -1f;
-    float bowResetValue    = 0f;
+    float bowResetValue    = -1f;
     float bowResetSubtract = 0.025f;
     
     public void tick() {
@@ -90,15 +90,11 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
         	}
         	
         	if(bowResetValue>=0) {
-    	    	bufferGraphics.setColor(Color.green);
-    	    	bufferGraphics.fillRect(playerHealthRect.x,playerHealthRect.y,(int)(enemyHealthRect.width*playerHealth), 25);
-    	    	bufferGraphics.setColor(Color.red);
-    	    	bufferGraphics.fillRect(playerHealthRect.x+(int)(enemyHealthRect.width*playerHealth),playerHealthRect.y,(int)(enemyHealthRect.width*(1f-playerHealth)), 25);
-    	    	bufferGraphics.setColor(Color.black);
-            	bufferGraphics.drawString((playerHealth*100f)+"%", playerHealthRect.x+25,playerHealthRect.y+15);
+        		bufferGraphics.setColor(new Color(bowResetValue,1f-bowResetValue,1f-bowResetValue));
+        		bufferGraphics.fillRect(0,captureRect.height,(int)(captureRect.width*bowResetValue), 25);
         	}
         	else {
-        		
+        		 
         	}
     	}
     }
@@ -133,7 +129,6 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     
     public float getPlayerHealth() {
     	BufferedImage playerHealth = cap.getSubimage(playerHealthRect.x,playerHealthRect.y,playerHealthRect.width,playerHealthRect.height);
-	   	 bufferGraphics.drawImage(playerHealth, 0, captureRect.height+50, null);
 	   	 int playerHealthRaster[] = new int[playerHealthRect.width*playerHealthRect.height];
 	   	 playerHealth.getRGB(0, 0, playerHealthRect.width, playerHealthRect.height, playerHealthRaster, 0, playerHealthRect.width);
    	 
