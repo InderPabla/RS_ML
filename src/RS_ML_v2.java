@@ -1,4 +1,4 @@
-import java.applet.Applet;
+
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.DefaultKeyboardFocusManager;
@@ -20,12 +20,15 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
-public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
+public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 
 	Dimension dim           = null; 
 	BufferedImage cap       = null;
@@ -94,8 +97,8 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     	
     	if(enemyHealth>=0) {
     		
-	    	System.out.println("Inputs: "+eatValue+" "+comboValue+" "+isMacroing+" "+enemyHealth+" "+playerHealth+" "+bowResetValue);
-	    	System.out.println("Outputs: "+action);
+	    	//System.out.println("Inputs: "+eatValue+" "+comboValue+" "+isMacroing+" "+enemyHealth+" "+playerHealth+" "+bowResetValue);
+	    	//System.out.println("Outputs: "+action);
 	    	traningData.add(
 	    			//inputs
 	    			eatValue,comboValue,isMacroing,enemyHealth,playerHealth,bowResetValue,
@@ -345,19 +348,24 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     	bowDamageRect    = new Rectangle (445,195,1,1);
     }
     
-    public void init()   { 
+    public RS_ML_v2()   { 
     	initilizePosition();
     	fileName = "fighting_data_set_"+set+".txt";
     	new Thread(this).start();
 	    font = new Font ("Monospaced", Font.BOLD , 14);
-	    	 
+	    
         dim = new Dimension(900,900); 
         this.setSize(dim);
-        this.resize(dim);
-         
+        //this.resize(dim); 
+        this.setLayout(null); 
+	    this.setLocation(captureRect.x+captureRect.width+50,captureRect.y-40);
+	    this.setVisible(true);
+	    this.show();
+	    this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
         setBackground(Color.black); 
 
-        offscreen = createImage(dim.width,dim.height); 
+        offscreen = new BufferedImage( dim.width, dim.height, BufferedImage.TYPE_INT_RGB ); 
 
         bufferGraphics = offscreen.getGraphics(); 
         bufferGraphics.setFont(font);
@@ -391,10 +399,10 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     
    
 
-    public void update(Graphics g) 
+    /*public void update(Graphics g) 
     { 
          paint(g); 
-    } 
+    } */
 
 
 	@Override
@@ -460,5 +468,9 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 	public void nativeKeyTyped(NativeKeyEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public static void main(String[] args) {
+		new RS_ML_v2();
 	}
 }

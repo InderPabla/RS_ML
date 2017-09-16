@@ -31,17 +31,19 @@ public class TraningData {
 			}
 		}
 		
+		
+		System.out.println("Saving: "+file.getAbsolutePath());
 		try {
 			writer = new PrintWriter(file);
 			
 			for(int i = 0; i < dataList.size();i++) {
 				float[] data = dataList.get(i);
 				String dataStr = "";
-				for(int j = 0; i<data.length;j++) {
+				for(int j = 0; j<data.length;j++) {
 					if(j == 0)
-						dataStr+=data[i];
+						dataStr+=data[j];
 					else 
-						dataStr+=","+data[i];
+						dataStr+=","+data[j];
 				}
 				writer.println(dataStr);
 			} 
