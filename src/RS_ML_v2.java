@@ -34,6 +34,7 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     Font font               = null;
     
     OutputAction action     = null;
+    TraningData traningData = null;
     MacroPlayer macroPlayer = null;
     Robot robot             = null;
     
@@ -46,8 +47,10 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     Point weaponPosition  = null;
     Point inventoryIndex  = null;
     
-    int waitTime = 25;
-    int ignoreInventorySlots = 3;
+    int set                  = 1;
+    int waitTime             = 25;
+    int ignoreInventorySlots = 3;   
+    String fileName          = "";
     
     boolean visualRender = true;
     
@@ -56,6 +59,9 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     float bowResetValue    = -1f;
     float bowResetSubtract = 0.025f;
     float macroTickValue   = -1f;
+    
+    int numberOfInputs = 6;
+    int numberOfOutputs = 3;
     
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
@@ -87,8 +93,18 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     	}
     	
     	if(enemyHealth>=0) {
+    		
 	    	System.out.println("Inputs: "+eatValue+" "+comboValue+" "+isMacroing+" "+enemyHealth+" "+playerHealth+" "+bowResetValue);
 	    	System.out.println("Outputs: "+action);
+	    	traningData.add(
+	    			//inputs
+	    			eatValue,comboValue,isMacroing,enemyHealth,playerHealth,bowResetValue,
+	    			
+	    			//outputs, checking if action is equal to any of the enum output action
+	    			action==OutputAction.COMBO?1:0,
+	    			action==OutputAction.EAT?1:0,
+	    			action==OutputAction.NONE?1:0
+	    			);
     	}
     }
     
@@ -331,7 +347,7 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
     
     public void init()   { 
     	initilizePosition();
-    	
+    	fileName = "fighting_data_set_"+set+".txt";
     	new Thread(this).start();
 	    font = new Font ("Monospaced", Font.BOLD , 14);
 	    	 
@@ -348,6 +364,7 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
         try {
         	robot = new Robot();
         	macroPlayer = new MacroPlayer(robot,this);
+        	traningData = new TraningData(fileName);
 		} 
         catch (AWTException e) {
 			e.printStackTrace();
@@ -432,6 +449,9 @@ public class RS_ML_v2 extends Applet implements Runnable, NativeKeyListener{
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_SPACE) {
 			 enemyPosition.x = MouseInfo.getPointerInfo().getLocation().x - captureRect.x;
 			 enemyPosition.y = MouseInfo.getPointerInfo().getLocation().y - captureRect.y;
+		 }
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_P) {
+			 traningData.save();
 		 }
 	}
 

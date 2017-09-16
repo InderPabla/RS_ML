@@ -88,7 +88,7 @@ public class MacroPlayer {
 	
 	public void appendComboMacro() {
 		clearMacroTask();
-		maxTime = 1650f+100f;
+		maxTime = 2050f+100f;
 		macroTaskList.add(new MacroTask(0,MacroAction.MOVE_TO_WEAPON));
 		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
@@ -101,6 +101,7 @@ public class MacroPlayer {
 		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_ENEMY));
 		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(400,MacroAction.NONE));
 		isMacroRunning = true;
 	}
 	

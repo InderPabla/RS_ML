@@ -14,7 +14,7 @@ public class TraningData {
 		dataList = new ArrayList<float[]>();
 	}
 
-	public void add(float[] data) {
+	public void add(float... data) {
 		dataList.add(data);
 	}
 	
