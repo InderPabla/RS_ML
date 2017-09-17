@@ -45,6 +45,7 @@ public class TraningData {
 					else 
 						dataStr+=","+data[j];
 				}
+				//System.out.println(dataStr);
 				writer.println(dataStr);
 			} 
 			
@@ -58,4 +59,10 @@ public class TraningData {
 		
 		return true;
 	}
+	
+	public int getDataCount() {
+		return dataList.size();
+	}
+	
+	
 }

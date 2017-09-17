@@ -50,7 +50,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     Point weaponPosition  = null;
     Point inventoryIndex  = null;
     
-    int set                  = 1;
+    int set                  = 5;
     int waitTime             = 25;
     int ignoreInventorySlots = 3;   
     String fileName          = "";
@@ -63,8 +63,9 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     float bowResetSubtract = 0.025f;
     float macroTickValue   = -1f;
     
-    int numberOfInputs = 6;
-    int numberOfOutputs = 3;
+    int numberOfInputs       = 6;
+    int numberOfOutputs      = 3;
+    int enemyHealthZeroCount = 0;
     
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
@@ -97,17 +98,32 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     	
     	if(enemyHealth>=0) {
     		
+    		if(enemyHealth<=0)
+    			enemyHealthZeroCount++;
+    		else 
+    			enemyHealthZeroCount = 0;
+    		
 	    	//System.out.println("Inputs: "+eatValue+" "+comboValue+" "+isMacroing+" "+enemyHealth+" "+playerHealth+" "+bowResetValue);
 	    	//System.out.println("Outputs: "+action);
-	    	traningData.add(
-	    			//inputs
-	    			eatValue,comboValue,isMacroing,enemyHealth,playerHealth,bowResetValue,
-	    			
-	    			//outputs, checking if action is equal to any of the enum output action
-	    			action==OutputAction.COMBO?1:0,
-	    			action==OutputAction.EAT?1:0,
-	    			action==OutputAction.NONE?1:0
-	    			);
+    		if(enemyHealthZeroCount <=3) {
+    			//System.out.println("Adding");
+		    	traningData.add(
+		    			//inputs: contains state of the fight and player status
+		    			eatValue,
+		    			comboValue,
+		    			isMacroing,
+		    			enemyHealth,
+		    			playerHealth,
+		    			bowResetValue,
+		    			
+		    			//outputs: checking if action is equal to any of the enum output action
+		    			action==OutputAction.COMBO?1:0,
+		    			action==OutputAction.EAT?1:0,
+		    			action==OutputAction.NONE?1:0
+		    			);
+		    	
+		    			
+    		}
     	}
     }
     
@@ -140,7 +156,10 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
         		bufferGraphics.setColor(new Color(macroTickValue,1f-macroTickValue,1f-macroTickValue));
         		bufferGraphics.fillRect(0,captureRect.height+25,(int)(captureRect.width*macroTickValue), 25);
         	}
-
+        	
+        	bufferGraphics.setColor(Color.yellow);
+        	bufferGraphics.drawString("Captured Length: ", captureRect.width+1, 50);
+        	bufferGraphics.drawString(traningData.getDataCount()+"", captureRect.width+100, 65);
     	}
     }
     
@@ -333,10 +352,12 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     }
     
     public void paint(Graphics g) { 
-    	 bufferGraphics.setColor(Color.BLACK);
-    	 bufferGraphics.fillRect(0,0,dim.width,dim.height);
-         tick();
-         g.drawImage(offscreen,0,0,this); 
+    	if(bufferGraphics!=null) {
+	    	bufferGraphics.setColor(Color.BLACK);
+	    	bufferGraphics.fillRect(0,0,dim.width,dim.height);
+	        tick();
+	        g.drawImage(offscreen,0,0,this); 
+    	}
     }
     
     public void initilizePosition() {
@@ -351,7 +372,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     public RS_ML_v2()   { 
     	initilizePosition();
     	fileName = "fighting_data_set_"+set+".txt";
-    	new Thread(this).start();
+    	
 	    font = new Font ("Monospaced", Font.BOLD , 14);
 	    
         dim = new Dimension(900,900); 
@@ -395,6 +416,8 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 
         // Don't forget to disable the parent handlers.
         logger.setUseParentHandlers(false);
+        
+        new Thread(this).start();
     }
     
    
