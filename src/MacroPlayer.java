@@ -88,31 +88,32 @@ public class MacroPlayer {
 	
 	public void appendComboMacro() {
 		clearMacroTask();
-		maxTime = 2050f+100f;
-		macroTaskList.add(new MacroTask(0,MacroAction.MOVE_TO_WEAPON));
-		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
-		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_ENEMY));
-		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
-		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
+		maxTime = 1745f+100f+1500f;
+		macroTaskList.add(new MacroTask(0,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_WEAPON));
+		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(10,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(10,MacroAction.MOVE_TO_ENEMY));
+		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(10,MacroAction.RELEASE));
 		macroTaskList.add(new MacroTask(1600,MacroAction.MOVE_TO_WEAPON));
-		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
-		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_ENEMY));
-		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
-		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(400,MacroAction.NONE));
+		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(10,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(10,MacroAction.MOVE_TO_ENEMY));
+		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(10,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(3000,MacroAction.NONE));
 		isMacroRunning = true;
 	}
 	
 	public void appendEatMacro() {
 		clearMacroTask();
-		maxTime = 410f +100f;
-		
-		macroTaskList.add(new MacroTask(0,MacroAction.MOVE_TO_FOOD));
-		macroTaskList.add(new MacroTask(5,MacroAction.PRESS));
-		macroTaskList.add(new MacroTask(5,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(400,MacroAction.NONE));
+		maxTime = 1500f+35f +100f;
+		macroTaskList.add(new MacroTask(0,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_FOOD));
+		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
+		macroTaskList.add(new MacroTask(10,MacroAction.RELEASE));
+		macroTaskList.add(new MacroTask(3000,MacroAction.NONE));
 		isMacroRunning = true;
 	}
 

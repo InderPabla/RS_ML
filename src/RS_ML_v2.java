@@ -16,6 +16,15 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,6 +76,11 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     int numberOfOutputs      = 3;
     int enemyHealthZeroCount = 0;
     
+    //Server socket for Python to connect to
+  	private ServerSocket serverSocket;
+  	private Socket socket;
+  	private boolean connected = false; //if server is connected to client
+    
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
     	bufferGraphics.drawImage(cap,0,0,null);
@@ -96,7 +110,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     		eatValue = macroTickValue;
     	}
     	
-    	if(enemyHealth>=0) {
+    	if(enemyHealth>0) {
     		
     		if(enemyHealth<=0)
     			enemyHealthZeroCount++;
@@ -124,7 +138,96 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 		    	
 		    			
     		}
+    		
+    		if(connected == true) {
+    			DataOutputStream out;
+    			float[] input = new float[] {eatValue,
+    	    			comboValue,
+    	    			isMacroing,
+    	    			enemyHealth,
+    	    			playerHealth,
+    	    			bowResetValue};
+    			
+    			
+    			try {
+    				out = new DataOutputStream(socket.getOutputStream());
+    				out.write(FloatArray2ByteArray(input));
+    			} catch (IOException e) {
+    				e.printStackTrace();
+    			}
+    			
+    			try {
+
+					DataInputStream ins = new DataInputStream(socket.getInputStream());
+					byte[] bytes = new byte[1];
+					ins.readFully(bytes);
+					
+					int actionIndex = Integer.parseInt(new String(bytes));
+					/*ByteBuffer bb = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
+					String str = bb.toString()
+					
+					int actionIndex = bb.getInt();*/
+					System.out.println(actionIndex);
+					if(actionIndex == 0) {
+						
+						
+						if(action==OutputAction.NONE ) {
+							 action = OutputAction.COMBO;
+							 macroPlayer.appendComboMacro();
+						}
+						
+						 
+					}
+					else if(actionIndex == 1) {
+						if(action==OutputAction.NONE) {
+							 action = OutputAction.EAT;
+							 macroPlayer.appendEatMacro();
+						}
+						
+					}
+					else if(actionIndex == 2) {
+						//action = OutputAction.NONE;
+					}
+				} 
+    			catch (IOException e) {
+					e.printStackTrace();
+				}
+    			
+
+    		}
+    		
     	}
+    	
+    	/*if(connected == true) {
+			float[] input = new float[] {eatValue,
+	    			comboValue,
+	    			isMacroing,
+	    			enemyHealth,
+	    			playerHealth,
+	    			bowResetValue};
+			
+			OutputStream output;
+			try {
+				output = socket.getOutputStream();
+				output.write(FloatArray2ByteArray(input));
+				
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}*/
+    	
+    	
+    }
+    
+    public static byte[] FloatArray2ByteArray(float[] values){
+        ByteBuffer buffer = ByteBuffer.allocate(4 * values.length);
+
+        for (float value : values){
+            buffer.putFloat(value);
+        }
+
+        return buffer.array();
     }
     
     public void visualRenderer() {
@@ -160,6 +263,8 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
         	bufferGraphics.setColor(Color.yellow);
         	bufferGraphics.drawString("Captured Length: ", captureRect.width+1, 50);
         	bufferGraphics.drawString(traningData.getDataCount()+"", captureRect.width+100, 65);
+        	
+        	bufferGraphics.drawString(connected==true?"Connected":"Not Connected",captureRect.width+1, 90);
     	}
     }
     
@@ -390,14 +495,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 
         bufferGraphics = offscreen.getGraphics(); 
         bufferGraphics.setFont(font);
-        try {
-        	robot = new Robot();
-        	macroPlayer = new MacroPlayer(robot,this);
-        	traningData = new TraningData(fileName);
-		} 
-        catch (AWTException e) {
-			e.printStackTrace();
-		}
+        
       
         try {
         	GlobalScreen.registerNativeHook();
@@ -418,6 +516,20 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
         logger.setUseParentHandlers(false);
         
         new Thread(this).start();
+        
+        try {
+        	robot = new Robot();
+        	macroPlayer = new MacroPlayer(robot,this);
+        	traningData = new TraningData(fileName);
+        	
+        	serverSocket = new ServerSocket(5050);
+			socket = serverSocket.accept();
+			connected = true;
+		} 
+        catch (AWTException | IOException e) {
+			e.printStackTrace();
+		}
+        
     }
     
    
@@ -454,6 +566,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 		 //System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
 
 	        if (e.getKeyCode() == NativeKeyEvent.VC_ESCAPE) {
+	        	connected = false;
 	            try {
 					GlobalScreen.unregisterNativeHook();
 				} catch (NativeHookException e1) {
@@ -485,7 +598,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 			 traningData.save();
 		 }
 	}
-
+	
 
 	@Override
 	public void nativeKeyTyped(NativeKeyEvent e) {
@@ -496,4 +609,6 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 	public static void main(String[] args) {
 		new RS_ML_v2();
 	}
+	
+	
 }
