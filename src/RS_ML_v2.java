@@ -171,7 +171,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 					if(actionIndex == 0) {
 						
 						
-						if(action==OutputAction.NONE ) {
+						if(action==OutputAction.NONE || action==OutputAction.EAT) {
 							 action = OutputAction.COMBO;
 							 macroPlayer.appendComboMacro();
 						}
@@ -179,7 +179,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 						 
 					}
 					else if(actionIndex == 1) {
-						if(action==OutputAction.NONE) {
+						if(action==OutputAction.NONE|| action==OutputAction.COMBO) {
 							 action = OutputAction.EAT;
 							 macroPlayer.appendEatMacro();
 						}
@@ -574,6 +574,18 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 					e1.printStackTrace();
 				}
 	        }
+	        else if(e.getKeyCode() == NativeKeyEvent.VC_W) {
+				 robot.keyPress(KeyEvent.VK_UP);
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_A) {
+				 robot.keyPress(KeyEvent.VK_LEFT);
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_S) {
+				 robot.keyPress(KeyEvent.VK_DOWN);
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
+				 robot.keyPress(KeyEvent.VK_RIGHT);
+			 }
 	}
 
 
@@ -596,6 +608,18 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 		 }
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_P) {
 			 traningData.save();
+		 }
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_W) {
+			 robot.keyRelease(KeyEvent.VK_UP);
+		 }
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_A) {
+			 robot.keyRelease(KeyEvent.VK_LEFT);
+		 }
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_S) {
+			 robot.keyRelease(KeyEvent.VK_DOWN);
+		 }
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
+			 robot.keyRelease(KeyEvent.VK_RIGHT);
 		 }
 	}
 	

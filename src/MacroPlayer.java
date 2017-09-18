@@ -88,7 +88,7 @@ public class MacroPlayer {
 	
 	public void appendComboMacro() {
 		clearMacroTask();
-		maxTime = 1745f+100f+1500f;
+		maxTime = 1745f+100f+400f;
 		macroTaskList.add(new MacroTask(0,MacroAction.RELEASE));
 		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_WEAPON));
 		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
@@ -102,18 +102,18 @@ public class MacroPlayer {
 		macroTaskList.add(new MacroTask(10,MacroAction.MOVE_TO_ENEMY));
 		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(10,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(3000,MacroAction.NONE));
+		macroTaskList.add(new MacroTask(400,MacroAction.NONE));
 		isMacroRunning = true;
 	}
 	
 	public void appendEatMacro() {
 		clearMacroTask();
-		maxTime = 1500f+35f +100f;
+		maxTime = 400f+35f +100f;
 		macroTaskList.add(new MacroTask(0,MacroAction.RELEASE));
 		macroTaskList.add(new MacroTask(5,MacroAction.MOVE_TO_FOOD));
 		macroTaskList.add(new MacroTask(20,MacroAction.PRESS));
 		macroTaskList.add(new MacroTask(10,MacroAction.RELEASE));
-		macroTaskList.add(new MacroTask(3000,MacroAction.NONE));
+		macroTaskList.add(new MacroTask(400,MacroAction.NONE));
 		isMacroRunning = true;
 	}
 

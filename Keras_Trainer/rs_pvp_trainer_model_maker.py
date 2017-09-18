@@ -22,17 +22,27 @@ def custom_model():
     model = Sequential()
     model.add(LSTM(250, return_sequences=True,
                    input_shape=(timesteps, data_dim)))  
+    print(model.output_shape)
     model.add(Activation('tanh'))
+    print(model.output_shape)
     model.add(LSTM(250, return_sequences=True))  
     model.add(Activation('tanh'))
+    print(model.output_shape)
     model.add(LSTM(250, return_sequences=True))  
     model.add(Activation('tanh'))
+    print(model.output_shape)
     model.add(LSTM(250, return_sequences=True)) 
     model.add(Activation('tanh'))
+    print(model.output_shape)
     model.add(LSTM(250, return_sequences=True))  
     model.add(Activation('tanh'))
-    model.add(Dense(nb_classes, activation='softmax'))
-    
+    print(model.output_shape)
+    model.add(Activation('tanh'))
+    model.add(keras.layers.core.Flatten())
+    print(model.output_shape)
+    model.add(Activation('tanh'))
+    model.add(Dense(3,activation='softmax',input_shape=(2500,)))
+    print(model.output_shape)
     model.compile(loss='categorical_crossentropy',
               optimizer='adam',
               metrics=['accuracy'])
@@ -70,7 +80,7 @@ def make_model(file):
     
     print("Creating Model At: ",file) 
     start_time = time.time()
-    model = custom_model_dense()    
+    model = custom_model()    
     
     json_model = model.to_json()
     
@@ -85,5 +95,5 @@ def make_model(file):
     
 
 if __name__ == "__main__":   
-    make_model("rs_pvp_model_desne_1.json")
+    make_model("rs_pvp_model_1.json")
 
