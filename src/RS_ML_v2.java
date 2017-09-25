@@ -26,6 +26,7 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,7 +60,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     Point weaponPosition  = null;
     Point inventoryIndex  = null;
     
-    int set                  = 5;
+    int set                  = 12;
     int waitTime             = 25;
     int ignoreInventorySlots = 3;   
     String fileName          = "";
@@ -68,7 +69,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     
     float enemyHealth      = -1f;
     float playerHealth     = -1f;
-    float bowResetValue    = -1f;
+    float bowResetValue    = 0f;
     float bowResetSubtract = 0.025f;
     float macroTickValue   = -1f;
     
@@ -80,6 +81,12 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
   	private ServerSocket serverSocket;
   	private Socket socket;
   	private boolean connected = false; //if server is connected to client
+    private boolean isRecordLocked = true;
+    
+    private float rndEnemyHealth = 0;
+    private float rndPlayerHealth = 0;
+    private float rndBowResetValue = 0;
+    private Random random = new Random();
     
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
@@ -103,8 +110,10 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     	float eatValue = -1;
     	float comboValue = -1;
     	float isMacroing = macroPlayer.isMacroRunning == true?1f:-1f;
+    	
     	if(action==OutputAction.COMBO) {
     		comboValue = macroTickValue;
+    		
     	}
     	else if(action==OutputAction.EAT) {
     		eatValue = macroTickValue;
@@ -119,7 +128,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     		
 	    	//System.out.println("Inputs: "+eatValue+" "+comboValue+" "+isMacroing+" "+enemyHealth+" "+playerHealth+" "+bowResetValue);
 	    	//System.out.println("Outputs: "+action);
-    		if(enemyHealthZeroCount <=3) {
+    		if(enemyHealthZeroCount <=3 && isRecordLocked == false) {
     			//System.out.println("Adding");
 		    	traningData.add(
 		    			//inputs: contains state of the fight and player status
@@ -171,7 +180,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 					if(actionIndex == 0) {
 						
 						
-						if(action==OutputAction.NONE || action==OutputAction.EAT) {
+						if(action!=OutputAction.EAT && isMacroing==-1f) {
 							 action = OutputAction.COMBO;
 							 macroPlayer.appendComboMacro();
 						}
@@ -179,7 +188,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 						 
 					}
 					else if(actionIndex == 1) {
-						if(action==OutputAction.NONE|| action==OutputAction.COMBO) {
+						if(action!=OutputAction.COMBO && isMacroing==-1f) {
 							 action = OutputAction.EAT;
 							 macroPlayer.appendEatMacro();
 						}
@@ -194,6 +203,20 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 				}
     			
 
+    		}
+    		else {
+    			if(playerHealth<0.31f) {
+    				if(action==OutputAction.NONE ) {
+						 action = OutputAction.EAT;
+						 macroPlayer.appendEatMacro();
+					}
+    			}
+    			else if(enemyHealth<=0.35f && bowResetValue>0.5f) {
+    				if(action==OutputAction.NONE ) {
+						 action = OutputAction.COMBO;
+						 macroPlayer.appendComboMacro();
+					}
+    			}
     		}
     		
     	}
@@ -265,14 +288,19 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
         	bufferGraphics.drawString(traningData.getDataCount()+"", captureRect.width+100, 65);
         	
         	bufferGraphics.drawString(connected==true?"Connected":"Not Connected",captureRect.width+1, 90);
+        	
+        	bufferGraphics.drawString(isRecordLocked==true?"Not Recording":"Recording",captureRect.width+1, 115);
     	}
     }
     
     public float bowResetValue() {
-    	if(bowResetValue>=0) {
+    	if(bowResetValue>0) {
     		bowResetValue -= bowResetSubtract;
+    		if(bowResetValue <0f)
+    			bowResetValue = 0f;
     	}
     	else {
+    		bowResetValue = 0f;
     		boolean bowDamageDone = isBowDamageDone();
     		if(bowDamageDone == true) {
     			bowResetValue = 1f;
@@ -586,6 +614,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 			 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
 				 robot.keyPress(KeyEvent.VK_RIGHT);
 			 }
+			 
 	}
 
 
@@ -621,9 +650,38 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 		 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
 			 robot.keyRelease(KeyEvent.VK_RIGHT);
 		 }
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_L) {
+			 isRecordLocked = !isRecordLocked;
+		 }	
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_1) {
+			 addNewData(0); //combo
+		 }	
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_2) {
+			 addNewData(1); //eat
+		 }	
+		 else if(e.getKeyCode() == NativeKeyEvent.VC_3) {
+			 addNewData(2); //none
+		 }	
 	}
 	
-
+	void addNewData(int outputActionData) {
+		traningData.add(
+    			//inputs: contains state of the fight and player status
+    			rndEnemyHealth,
+    			rndPlayerHealth,
+    			rndBowResetValue,
+    			
+    			//outputs: checking if action is equal to any of the enum output action
+    			outputActionData==0?1:0,
+    			outputActionData==1?1:0,
+    			outputActionData==2?1:0
+    			);
+		
+		rndBowResetValue = random.nextFloat();
+		rndPlayerHealth = random.nextFloat();
+		rndEnemyHealth = random.nextFloat();
+	}
+	
 	@Override
 	public void nativeKeyTyped(NativeKeyEvent e) {
 		// TODO Auto-generated method stub

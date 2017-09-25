@@ -9,13 +9,52 @@ public class TraningData {
 	private ArrayList<float[]> dataList;
 	File file = null;
 	
-	public TraningData(String fileName) {
+	private boolean eatDataGatheringMode = false;
+	private boolean comboDataGatheringMode = false;
+	 
+	  
+	TraningData(String fileName) {
 		file = new File(fileName);
 		dataList = new ArrayList<float[]>();
 	}
 
+	
 	public void add(float... data) {
-		dataList.add(data);
+		/*
+		 eatValue, comboValue, isMacroing,enemyHealth, playerHealth, bowResetValue, COMBO, EAT, NONE
+		 */
+	
+		if(eatDataGatheringMode == true && dataList.size()>11) {
+			if(data[7]==1f) {
+				dataList.add(data);
+			}
+			else {
+				for(int i = dataList.size()-10;i<dataList.size();i++) {
+					if( dataList.get(i)[7]==1f) {
+						dataList.add(data);
+						break;
+					}
+				}
+			}
+			
+		}
+		else if (comboDataGatheringMode == true && dataList.size()>11) {
+			if(data[6]==1f) {
+				dataList.add(data);
+			}
+			else {
+				for(int i = dataList.size()-10;i<dataList.size();i++) {
+					if( dataList.get(i)[6]==1f) {
+						dataList.add(data);
+						break;
+					}
+				}
+			}
+		}
+		else {
+			dataList.add(data);
+		}
+		
 	}
 	
 	public boolean save() {
