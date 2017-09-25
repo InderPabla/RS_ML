@@ -14,6 +14,7 @@ import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
@@ -38,7 +39,7 @@ import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
-public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
+public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, MouseListener, MouseMotionListener{
 
 	Dimension dim           = null; 
 	BufferedImage cap       = null;
@@ -55,12 +56,13 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     Rectangle enemyHealthRect  = null;
     Rectangle playerHealthRect = null;
     Rectangle bowDamageRect    = null; 
+    Rectangle comboRect,eatRect,noneRect;
     
     Point enemyPosition   = null;
     Point weaponPosition  = null;
     Point inventoryIndex  = null;
     
-    int set                  = 12;
+    int set                  = 13;
     int waitTime             = 25;
     int ignoreInventorySlots = 3;   
     String fileName          = "";
@@ -88,6 +90,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     private float rndBowResetValue = 0;
     private Random random = new Random();
     
+    int mX,mY;
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
     	bufferGraphics.drawImage(cap,0,0,null);
@@ -290,6 +293,54 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
         	bufferGraphics.drawString(connected==true?"Connected":"Not Connected",captureRect.width+1, 90);
         	
         	bufferGraphics.drawString(isRecordLocked==true?"Not Recording":"Recording",captureRect.width+1, 115);
+    	
+        	int rndEnemyHealthDown = 550;
+        	bufferGraphics.setColor(Color.green);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*rndEnemyHealth), 25);
+	    	bufferGraphics.setColor(Color.red);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndEnemyHealth),enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*(1f-rndEnemyHealth)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((rndEnemyHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndEnemyHealthDown);
+        	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString(": Enemy Health", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndEnemyHealthDown);
+        	
+        	int rndPlayerHealthDown = 600;
+        	bufferGraphics.setColor(Color.green);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*rndPlayerHealth), 25);
+	    	bufferGraphics.setColor(Color.red);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndPlayerHealth),enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*(1f-rndPlayerHealth)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((rndPlayerHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndPlayerHealthDown);
+        	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString(": Player Health", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndPlayerHealthDown);
+        	
+        	int rndBowResetValueDown = 650;
+        	bufferGraphics.setColor(Color.magenta);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*rndBowResetValue), 25);
+	    	bufferGraphics.setColor(Color.orange);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndBowResetValue),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-rndBowResetValue)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
+        	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
+    		
+        	Rectangle button = comboRect;
+        	bufferGraphics.setColor(Color.red);
+	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+	    	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString("COMBO", button.x+20,button.y+20);
+        	
+	    	button = eatRect;
+        	bufferGraphics.setColor(Color.magenta);
+	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+	    	bufferGraphics.drawString("EAT", button.x+20,button.y+20);
+	    	
+	    	button = noneRect;
+        	bufferGraphics.setColor(Color.orange);
+	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+	    	bufferGraphics.drawString("NONE", button.x+20,button.y+20);
+	    	
+        	
     	}
     }
     
@@ -500,10 +551,20 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
     	enemyPosition    = new Point(213,167);
     	playerHealthRect = new Rectangle(543,42,7,26);
     	bowDamageRect    = new Rectangle (445,195,1,1);
+    	
+    	comboRect = new Rectangle(enemyHealthRect.x+300,enemyHealthRect.y+600,100, 100);
+    	eatRect = new Rectangle(enemyHealthRect.x+420,enemyHealthRect.y+600,100, 100);
+    	noneRect = new Rectangle(enemyHealthRect.x+540,enemyHealthRect.y+600,100, 100);
+    	
     }
     
     public RS_ML_v2()   { 
     	initilizePosition();
+    	
+    	rndBowResetValue = random.nextFloat();
+		rndPlayerHealth = random.nextFloat();
+		rndEnemyHealth = random.nextFloat();
+		
     	fileName = "fighting_data_set_"+set+".txt";
     	
 	    font = new Font ("Monospaced", Font.BOLD , 14);
@@ -680,6 +741,8 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 		rndBowResetValue = random.nextFloat();
 		rndPlayerHealth = random.nextFloat();
 		rndEnemyHealth = random.nextFloat();
+		
+		
 	}
 	
 	@Override
@@ -690,6 +753,52 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener{
 	
 	public static void main(String[] args) {
 		new RS_ML_v2();
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		// TODO Auto-generated method stub
+		mY = e.getY();
+		mX = e.getX();
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		mY = e.getY();
+		mX = e.getX();
+		
+		
 	}
 	
 	
