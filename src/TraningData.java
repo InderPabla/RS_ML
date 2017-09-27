@@ -103,5 +103,10 @@ public class TraningData {
 		return dataList.size();
 	}
 	
+	public void removeLast() {
+		if(dataList.size()>0) {
+			dataList.remove(dataList.size()-1);
+		}
+	}
 	
 }

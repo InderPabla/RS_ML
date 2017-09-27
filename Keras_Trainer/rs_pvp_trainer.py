@@ -102,6 +102,8 @@ data_set_9 = "Data_Sets_2/fighting_data_set_9_combo_2.txt"
 data_set_10 = "Data_Sets_2/fighting_data_set_10_eat_2.txt"
 data_set_11 = "Data_Sets_2/fighting_data_set_11_eat_2.txt"
 data_set_12 = "Data_Sets_2/fighting_data_set_12_norm_2.txt"
+data_set_13 = "Data_Sets_2/fighting_data_set_13.txt"
+data_set_14 = "Data_Sets_2/fighting_data_set_14.txt"
 
 json_file = open(model_name, 'r')
 loaded_model_json = json_file.read()
@@ -115,19 +117,29 @@ if(os.path.exists(save_weights_file)):
 else:
     print("does not exist")
 
-opt = SGD(lr=0.01, decay=0.000001, momentum=0.9, nesterov=True)
+opt = SGD(lr=0.009, decay=0.000001, momentum=0.9, nesterov=True)
 opt2 = keras.optimizers.Adagrad(lr=0.01, epsilon=1e-08, decay=0.0)
-model.compile(loss = "categorical_crossentropy", optimizer = opt2)
-#model.compile(loss = "mean_squared_error", optimizer = opt2)
+#model.compile(loss = "categorical_crossentropy", optimizer = opt)
+model.compile(loss = "mean_squared_error", optimizer = opt)
 
 traning_mode = False
-predict_mode = True
+predict_mode = False
 
 actions = ["COMBO","EAT","NONE"]
 
 if(traning_mode == True):
     print("Traning Mode")
-
+    data_x_13, data_y_13 = get_raw_data(data_set_13,503,3,3)
+    data_x_14, data_y_14 = get_raw_data(data_set_14,514,3,3)
+    for i in range(0,25):
+        for j in range(0,10):
+            model.fit(np.array(data_x_13), np.array(data_y_13), nb_epoch=1,verbose = 2) 
+            model.fit(np.array(data_x_14), np.array(data_y_14), nb_epoch=1,verbose = 2) 
+            model.save_weights(save_weights_file) 
+            print("Saving ",i);
+    print("Exiting")
+    
+    '''
     data_x_6, data_y_6 = get_raw_data(data_set_6,11190,3,3)
     data_x_12, data_y_12 = get_raw_data(data_set_12,11481,3,3)
     
@@ -158,8 +170,8 @@ if(traning_mode == True):
         
         time.sleep(2)
         
-        
-    print("Exiting")
+    '''    
+    
     '''
     data_x_6, data_y_6 = parseDataSet(data_set_6,11190)
     data_x_12, data_y_12 = parseDataSet(data_set_12,11481)
@@ -232,20 +244,11 @@ else:
    if(predict_mode == True):
        print("Prediction Mode")
 
-       data_x, data_y =  get_raw_data(data_set_6,11190,3,3)
+       data_x, data_y =  get_raw_data(data_set_13,503,3,3)
        predictSet(data_x,data_y,model);
-       data_x, data_y =  get_raw_data(data_set_7,4283,3,3)
+       data_x, data_y =  get_raw_data(data_set_14,514,3,3)
        predictSet(data_x,data_y,model);
-       data_x, data_y =  get_raw_data(data_set_8,7718,3,3)
-       predictSet(data_x,data_y,model);
-       data_x, data_y =  get_raw_data(data_set_9,4628,3,3)
-       predictSet(data_x,data_y,model);
-       data_x, data_y =  get_raw_data(data_set_10,2288,3,3)
-       predictSet(data_x,data_y,model);
-       data_x, data_y =  get_raw_data(data_set_11,3176,3,3)
-       predictSet(data_x,data_y,model);
-       data_x, data_y =  get_raw_data(data_set_12,11481,3,3)
-       predictSet(data_x,data_y,model);
+      
        
    else:
        print("Testing Mode") 
@@ -266,8 +269,9 @@ else:
 
            if(len(data) == expected_length):
                real_data = []   
-               a,b,c,d,e,f = struct.unpack('ffffff', bytearray(bytes(data)))
-               real_data = np.array([a,b,c,d,e,f ],dtype=np.float32)
+               a,b,c,d,e,f = struct.unpack('>ffffff', bytearray(bytes(data)))
+               #real_data = np.array([a,b,c,d,e,f ],dtype=np.float32)
+               real_data = np.array([d,e,f ],dtype=np.float32)
                
                if(len(time_data_x)==0):
                    for i in range(0,time_step):
@@ -278,9 +282,10 @@ else:
                if(len(time_data_x)>time_step):
                    time_data_x.pop(0)
                     
-               index = np.argmax(model.predict(np.array([time_data_x]))[0]*100)
+               #index = for tnp.argmax(model.predict(np.array([time_data_x]))[0]*100)
+               index = np.argmax(model.predict(np.array([real_data]))[0]*100)
                message = str(index)
-               print(actions[index])
+               print(actions[index],"  ",real_data)
                clientsocket.send(message.encode())
                  
                '''

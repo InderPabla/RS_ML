@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
+import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
 import org.jnativehook.GlobalScreen;
@@ -40,7 +41,6 @@ import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
 public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, MouseListener, MouseMotionListener{
-
 	Dimension dim           = null; 
 	BufferedImage cap       = null;
     Graphics bufferGraphics = null; 
@@ -56,13 +56,13 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     Rectangle enemyHealthRect  = null;
     Rectangle playerHealthRect = null;
     Rectangle bowDamageRect    = null; 
-    Rectangle comboRect,eatRect,noneRect;
+    Rectangle comboRect,eatRect,noneRect,removeRect;
     
     Point enemyPosition   = null;
     Point weaponPosition  = null;
     Point inventoryIndex  = null;
     
-    int set                  = 13;
+    int set                  = 14;
     int waitTime             = 25;
     int ignoreInventorySlots = 3;   
     String fileName          = "";
@@ -71,7 +71,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     
     float enemyHealth      = -1f;
     float playerHealth     = -1f;
-    float bowResetValue    = 0f;
+    float bowResetValue    = -1f;
     float bowResetSubtract = 0.025f;
     float macroTickValue   = -1f;
     
@@ -88,9 +88,13 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     private float rndEnemyHealth = 0;
     private float rndPlayerHealth = 0;
     private float rndBowResetValue = 0;
+    private float rndBowResetProb = 0.6f;
+    
     private Random random = new Random();
     
     int mX,mY;
+    private boolean escapePressed = false;
+    
     public void tick() {
     	cap = robot.createScreenCapture(captureRect);
     	bufferGraphics.drawImage(cap,0,0,null);
@@ -101,11 +105,18 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     	macroTickValue = macroPlayer.macroTick();
     	
     	if(macroPlayer.isMacroRunning == false) {
-    		action = OutputAction.NONE;
+    		/*if(action!=OutputAction.NONE && action!=OutputAction.CLICK_ENEMY) {
+    			action = OutputAction.CLICK_ENEMY;
+    			macroPlayer.appendClickEnemyMacro();
+    		}
+    		else {*/
+    			action = OutputAction.NONE;
+    		//}
+    		
     	}
     	
     	createTickData();
-    	//System.out.println(action+" "+macroTickValue);
+
     	visualRenderer();
     }
     
@@ -151,75 +162,78 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 		    			
     		}
     		
-    		if(connected == true) {
-    			DataOutputStream out;
-    			float[] input = new float[] {eatValue,
-    	    			comboValue,
-    	    			isMacroing,
-    	    			enemyHealth,
-    	    			playerHealth,
-    	    			bowResetValue};
-    			
-    			
-    			try {
-    				out = new DataOutputStream(socket.getOutputStream());
-    				out.write(FloatArray2ByteArray(input));
-    			} catch (IOException e) {
-    				e.printStackTrace();
-    			}
-    			
-    			try {
-
-					DataInputStream ins = new DataInputStream(socket.getInputStream());
-					byte[] bytes = new byte[1];
-					ins.readFully(bytes);
-					
-					int actionIndex = Integer.parseInt(new String(bytes));
-					/*ByteBuffer bb = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
-					String str = bb.toString()
-					
-					int actionIndex = bb.getInt();*/
-					System.out.println(actionIndex);
-					if(actionIndex == 0) {
+    		if(escapePressed == false) {
+	    		if(connected == true) {
+	    			DataOutputStream out;
+	    			float[] input = new float[] {eatValue,
+	    	    			comboValue,
+	    	    			isMacroing,
+	    	    			enemyHealth,
+	    	    			playerHealth,
+	    	    			bowResetValue};
+	    			
+	    			
+	    			try {
+	    				out = new DataOutputStream(socket.getOutputStream());
+	    				out.write(FloatArray2ByteArray(input));
+	    			} catch (IOException e) {
+	    				e.printStackTrace();
+	    			}
+	    			
+	    			try {
+	
+						DataInputStream ins = new DataInputStream(socket.getInputStream());
+						byte[] bytes = new byte[1];
+						ins.readFully(bytes);
 						
+						int actionIndex = Integer.parseInt(new String(bytes));
+						/*ByteBuffer bb = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
+						String str = bb.toString()
 						
-						if(action!=OutputAction.EAT && isMacroing==-1f) {
-							 action = OutputAction.COMBO;
-							 macroPlayer.appendComboMacro();
+						int actionIndex = bb.getInt();*/
+						System.out.println(actionIndex);
+						if(actionIndex == 0) {
+							
+							
+							if(action!=OutputAction.EAT && isMacroing==-1f) {
+								 action = OutputAction.COMBO;
+								 macroPlayer.appendComboMacro();
+							}
+							
+							 
 						}
-						
-						 
+						else if(actionIndex == 1) {
+							if(action!=OutputAction.COMBO && isMacroing==-1f) {
+								 action = OutputAction.EAT;
+								 macroPlayer.appendEatMacro();
+							}
+							
+						}
+						else if(actionIndex == 2) {
+							
+							//action = OutputAction.NONE;
+						}
+					} 
+	    			catch (IOException e) {
+						e.printStackTrace();
 					}
-					else if(actionIndex == 1) {
-						if(action!=OutputAction.COMBO && isMacroing==-1f) {
+	    			
+	
+	    		}
+	    		else {
+	    			/*if(playerHealth<0.31f) {
+	    				if(action==OutputAction.NONE ) {
 							 action = OutputAction.EAT;
 							 macroPlayer.appendEatMacro();
 						}
-						
-					}
-					else if(actionIndex == 2) {
-						//action = OutputAction.NONE;
-					}
-				} 
-    			catch (IOException e) {
-					e.printStackTrace();
-				}
-    			
-
+	    			}
+	    			else if(enemyHealth<=0.35f && bowResetValue>0.5f) {
+	    				if(action==OutputAction.NONE ) {
+							 action = OutputAction.COMBO;
+							 macroPlayer.appendComboMacro();
+						}
+	    			}*/
     		}
-    		else {
-    			if(playerHealth<0.31f) {
-    				if(action==OutputAction.NONE ) {
-						 action = OutputAction.EAT;
-						 macroPlayer.appendEatMacro();
-					}
-    			}
-    			else if(enemyHealth<=0.35f && bowResetValue>0.5f) {
-    				if(action==OutputAction.NONE ) {
-						 action = OutputAction.COMBO;
-						 macroPlayer.appendComboMacro();
-					}
-    			}
     		}
     		
     	}
@@ -293,7 +307,8 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
         	bufferGraphics.drawString(connected==true?"Connected":"Not Connected",captureRect.width+1, 90);
         	
         	bufferGraphics.drawString(isRecordLocked==true?"Not Recording":"Recording",captureRect.width+1, 115);
-    	
+        	bufferGraphics.drawString("Bow Reset Prob: "+(int)(rndBowResetProb*100f)+"%",captureRect.width+1, 140);
+        	
         	int rndEnemyHealthDown = 550;
         	bufferGraphics.setColor(Color.green);
 	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*rndEnemyHealth), 25);
@@ -315,43 +330,61 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
         	bufferGraphics.drawString(": Player Health", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndPlayerHealthDown);
         	
         	int rndBowResetValueDown = 650;
-        	bufferGraphics.setColor(Color.magenta);
-	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*rndBowResetValue), 25);
-	    	bufferGraphics.setColor(Color.orange);
-	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndBowResetValue),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-rndBowResetValue)), 25);
-	    	bufferGraphics.setColor(Color.black);
-        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
-        	bufferGraphics.setColor(Color.white);
-        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
-    		
+        	if(rndBowResetValue!=-1) {
+        		bufferGraphics.setColor(Color.magenta);
+		    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-rndBowResetValue)), 25);
+		    	bufferGraphics.setColor(Color.orange);
+		    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-rndBowResetValue)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(rndBowResetValue)), 25);
+		    	bufferGraphics.setColor(Color.black);
+	        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
+	        	bufferGraphics.setColor(Color.white);
+	        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
+        	}
+        	else {
+        		bufferGraphics.setColor(Color.magenta);
+		    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-0)), 25);
+		    	bufferGraphics.setColor(Color.orange);
+		    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-0)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(0)), 25);
+		    	bufferGraphics.setColor(Color.black);
+	        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
+	        	bufferGraphics.setColor(Color.white);
+	        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
+        	}
+        	
         	Rectangle button = comboRect;
         	bufferGraphics.setColor(Color.red);
 	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
 	    	bufferGraphics.setColor(Color.white);
-        	bufferGraphics.drawString("COMBO", button.x+20,button.y+20);
+        	bufferGraphics.drawString("COMBO", button.x+20,button.y+50);
         	
 	    	button = eatRect;
         	bufferGraphics.setColor(Color.magenta);
 	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
-	    	bufferGraphics.drawString("EAT", button.x+20,button.y+20);
-	    	
+	    	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString("EAT", button.x+20,button.y+50);
+
 	    	button = noneRect;
         	bufferGraphics.setColor(Color.orange);
 	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
-	    	bufferGraphics.drawString("NONE", button.x+20,button.y+20);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString("NONE", button.x+20,button.y+50);
 	    	
-        	
+        	button = removeRect;
+        	bufferGraphics.setColor(Color.GRAY);
+	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+	    	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString("REMOVE LAST DATA", button.x+30,button.y+25);
     	}
     }
     
     public float bowResetValue() {
     	if(bowResetValue>0) {
     		bowResetValue -= bowResetSubtract;
-    		if(bowResetValue <0f)
-    			bowResetValue = 0f;
+    		if(bowResetValue <=0f)
+    			bowResetValue = -1f;
     	}
     	else {
-    		bowResetValue = 0f;
+    		bowResetValue = -1f;
     		boolean bowDamageDone = isBowDamageDone();
     		if(bowDamageDone == true) {
     			bowResetValue = 1f;
@@ -430,7 +463,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     	 //sector area of circle
     	 playerHPPercent = (float) ((float) ((13f*13f)*Math.acos((13f-height)/13f)-(13f-height)*(Math.sqrt(2*13f*height-(height*height))))/(Math.PI*13f*13f));
     	 
-    	 this.playerHealth = playerHPPercent;
+    	 this.playerHealth = (float)Math.pow(playerHPPercent,1.1f);
     	 
     	 return playerHPPercent;
     }
@@ -555,6 +588,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     	comboRect = new Rectangle(enemyHealthRect.x+300,enemyHealthRect.y+600,100, 100);
     	eatRect = new Rectangle(enemyHealthRect.x+420,enemyHealthRect.y+600,100, 100);
     	noneRect = new Rectangle(enemyHealthRect.x+540,enemyHealthRect.y+600,100, 100);
+    	removeRect = new Rectangle(enemyHealthRect.x+420-50,enemyHealthRect.y+719,200, 50);
     	
     }
     
@@ -562,6 +596,11 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     	initilizePosition();
     	
     	rndBowResetValue = random.nextFloat();
+    	if(rndBowResetValue<0.5f) {
+    		rndBowResetValue = -1f;
+    	}    
+    	else 
+    		rndBowResetValue = random.nextFloat();
 		rndPlayerHealth = random.nextFloat();
 		rndEnemyHealth = random.nextFloat();
 		
@@ -573,11 +612,13 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
         this.setSize(dim);
         //this.resize(dim); 
         this.setLayout(null); 
+
+	    
 	    this.setLocation(captureRect.x+captureRect.width+50,captureRect.y-40);
 	    this.setVisible(true);
 	    this.show();
 	    this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
+	    
         setBackground(Color.black); 
 
         offscreen = new BufferedImage( dim.width, dim.height, BufferedImage.TYPE_INT_RGB ); 
@@ -595,6 +636,9 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 
         	System.exit(1);
         }
+
+        this.addMouseListener(this);
+        this.addMouseMotionListener(this);
 
         GlobalScreen.addNativeKeyListener(this);  
      
@@ -656,6 +700,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 
 	        if (e.getKeyCode() == NativeKeyEvent.VC_ESCAPE) {
 	        	connected = false;
+	        	escapePressed = true;
 	            try {
 					GlobalScreen.unregisterNativeHook();
 				} catch (NativeHookException e1) {
@@ -663,18 +708,21 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 					e1.printStackTrace();
 				}
 	        }
-	        else if(e.getKeyCode() == NativeKeyEvent.VC_W) {
-				 robot.keyPress(KeyEvent.VK_UP);
-			 }
-			 else if(e.getKeyCode() == NativeKeyEvent.VC_A) {
-				 robot.keyPress(KeyEvent.VK_LEFT);
-			 }
-			 else if(e.getKeyCode() == NativeKeyEvent.VC_S) {
-				 robot.keyPress(KeyEvent.VK_DOWN);
-			 }
-			 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
-				 robot.keyPress(KeyEvent.VK_RIGHT);
-			 }
+	        
+	        if(escapePressed == false) {
+		         if(e.getKeyCode() == NativeKeyEvent.VC_W) {
+					 robot.keyPress(KeyEvent.VK_UP);
+				 }
+				 else if(e.getKeyCode() == NativeKeyEvent.VC_A) {
+					 robot.keyPress(KeyEvent.VK_LEFT);
+				 }
+				 else if(e.getKeyCode() == NativeKeyEvent.VC_S) {
+					 robot.keyPress(KeyEvent.VK_DOWN);
+				 }
+				 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
+					 robot.keyPress(KeyEvent.VK_RIGHT);
+				 }
+	        }
 			 
 	}
 
@@ -684,45 +732,44 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 	public void nativeKeyReleased(NativeKeyEvent e) {
 		 //System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(e.getKeyCode()));
 		
-		 if(e.getKeyCode() == NativeKeyEvent.VC_Z) {
-			 action = OutputAction.EAT;
-			 macroPlayer.appendEatMacro();
+		 if(escapePressed == false) {
+			 if(e.getKeyCode() == NativeKeyEvent.VC_Z) {
+				 action = OutputAction.EAT;
+				 macroPlayer.appendEatMacro();
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_X) {
+				 action = OutputAction.COMBO;
+				 macroPlayer.appendComboMacro();
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_SPACE) {
+				 enemyPosition.x = MouseInfo.getPointerInfo().getLocation().x - captureRect.x;
+				 enemyPosition.y = MouseInfo.getPointerInfo().getLocation().y - captureRect.y;
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_P) {
+				 traningData.save();
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_W) {
+				 robot.keyRelease(KeyEvent.VK_UP);
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_A) {
+				 robot.keyRelease(KeyEvent.VK_LEFT);
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_S) {
+				 robot.keyRelease(KeyEvent.VK_DOWN);
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
+				 robot.keyRelease(KeyEvent.VK_RIGHT);
+			 }
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_L) {
+				 isRecordLocked = !isRecordLocked;
+			 }	
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_UP) {
+				 rndBowResetProb+=0.1f;
+			 }	
+			 else if(e.getKeyCode() == NativeKeyEvent.VC_DOWN) {
+				 rndBowResetProb-=0.1f;
+			 }	
 		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_X) {
-			 action = OutputAction.COMBO;
-			 macroPlayer.appendComboMacro();
-		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_SPACE) {
-			 enemyPosition.x = MouseInfo.getPointerInfo().getLocation().x - captureRect.x;
-			 enemyPosition.y = MouseInfo.getPointerInfo().getLocation().y - captureRect.y;
-		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_P) {
-			 traningData.save();
-		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_W) {
-			 robot.keyRelease(KeyEvent.VK_UP);
-		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_A) {
-			 robot.keyRelease(KeyEvent.VK_LEFT);
-		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_S) {
-			 robot.keyRelease(KeyEvent.VK_DOWN);
-		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_D) {
-			 robot.keyRelease(KeyEvent.VK_RIGHT);
-		 }
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_L) {
-			 isRecordLocked = !isRecordLocked;
-		 }	
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_1) {
-			 addNewData(0); //combo
-		 }	
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_2) {
-			 addNewData(1); //eat
-		 }	
-		 else if(e.getKeyCode() == NativeKeyEvent.VC_3) {
-			 addNewData(2); //none
-		 }	
 	}
 	
 	void addNewData(int outputActionData) {
@@ -739,6 +786,11 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     			);
 		
 		rndBowResetValue = random.nextFloat();
+    	if(rndBowResetValue<rndBowResetProb) {
+    		rndBowResetValue = -1f;
+    	}    
+    	else 
+    		rndBowResetValue = random.nextFloat();
 		rndPlayerHealth = random.nextFloat();
 		rndEnemyHealth = random.nextFloat();
 		
@@ -798,7 +850,20 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 		mY = e.getY();
 		mX = e.getX();
 		
-		
+		if(escapePressed == false) {
+			if(comboRect.contains(mX,mY) == true) {
+				addNewData(0); //combo
+			}
+			else if(eatRect.contains(mX,mY) == true) {
+				addNewData(1); //eat
+			}
+			else if(noneRect.contains(mX,mY) == true) {
+				addNewData(2); //none
+			}
+			else if(removeRect.contains(mX,mY) == true) {
+				traningData.removeLast();
+			}
+		}
 	}
 	
 	
