@@ -12,6 +12,9 @@ from keras.layers.core import Dense, Dropout, Activation
 from keras.layers import LSTM, TimeDistributed,Reshape
 import time
 import numpy as np
+from keras.utils.vis_utils import plot_model
+import graphviz
+import pydot
 
 def custom_model_2():
     data_dim = 3
@@ -161,7 +164,7 @@ def make_model(file):
     print("Creating Model At: ",file) 
     start_time = time.time()
     model = custom_model_dense_2()    
-    
+    plot_model(model, to_file='model.png', show_shapes=True)
     json_model = model.to_json()
     
     with open(file, "w") as json_file:

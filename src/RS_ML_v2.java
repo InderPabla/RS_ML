@@ -57,6 +57,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     Rectangle playerHealthRect = null;
     Rectangle bowDamageRect    = null; 
     Rectangle comboRect,eatRect,noneRect,removeRect;
+    AnimateButton comboActionNet,eatActionNet,noneActionNet;
     
     Point enemyPosition   = null;
     Point weaponPosition  = null;
@@ -67,13 +68,12 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     int ignoreInventorySlots = 3;   
     String fileName          = "";
     
-    boolean visualRender = true;
-    
     float enemyHealth      = -1f;
     float playerHealth     = -1f;
     float bowResetValue    = -1f;
     float bowResetSubtract = 0.025f;
     float macroTickValue   = -1f;
+
     
     int numberOfInputs       = 6;
     int numberOfOutputs      = 3;
@@ -89,7 +89,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     private float rndPlayerHealth = 0;
     private float rndBowResetValue = 0;
     private float rndBowResetProb = 0.6f;
-    
+     
     private Random random = new Random();
     
     int mX,mY;
@@ -105,6 +105,8 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     	macroTickValue = macroPlayer.macroTick();
     	
     	if(macroPlayer.isMacroRunning == false) {
+    		if(action!=OutputAction.NONE)
+    			 noneActionNet.animate();
     		/*if(action!=OutputAction.NONE && action!=OutputAction.CLICK_ENEMY) {
     			action = OutputAction.CLICK_ENEMY;
     			macroPlayer.appendClickEnemyMacro();
@@ -191,13 +193,15 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 						String str = bb.toString()
 						
 						int actionIndex = bb.getInt();*/
-						System.out.println(actionIndex);
+						
 						if(actionIndex == 0) {
 							
 							
 							if(action!=OutputAction.EAT && isMacroing==-1f) {
+								 System.out.println(bowResetValue);
 								 action = OutputAction.COMBO;
 								 macroPlayer.appendComboMacro();
+								 comboActionNet.animate();
 							}
 							
 							 
@@ -206,6 +210,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 							if(action!=OutputAction.COMBO && isMacroing==-1f) {
 								 action = OutputAction.EAT;
 								 macroPlayer.appendEatMacro();
+								 eatActionNet.animate();
 							}
 							
 						}
@@ -233,7 +238,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
 							 macroPlayer.appendComboMacro();
 						}
 	    			}*/
-    		}
+	    		}
     		}
     		
     	}
@@ -271,110 +276,368 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     }
     
     public void visualRenderer() {
-    	if(visualRender==true) {
-    		if(enemyHealth>=0) {
-    	    	bufferGraphics.setColor(Color.green);
-    	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y,(int)(enemyHealthRect.width*enemyHealth), 25);
-    	    	bufferGraphics.setColor(Color.red);
-    	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*enemyHealth),enemyHealthRect.y,(int)(enemyHealthRect.width*(1f-enemyHealth)), 25);
-    	    	bufferGraphics.setColor(Color.black);
-            	bufferGraphics.drawString((enemyHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15);
-        	}
-        	
-        	if(playerHealth>=0) {
-    	    	bufferGraphics.setColor(Color.green);
-    	    	bufferGraphics.fillRect(playerHealthRect.x,playerHealthRect.y,(int)(enemyHealthRect.width*playerHealth), 25);
-    	    	bufferGraphics.setColor(Color.red);
-    	    	bufferGraphics.fillRect(playerHealthRect.x+(int)(enemyHealthRect.width*playerHealth),playerHealthRect.y,(int)(enemyHealthRect.width*(1f-playerHealth)), 25);
-    	    	bufferGraphics.setColor(Color.black);
-            	bufferGraphics.drawString((playerHealth*100f)+"%", playerHealthRect.x+25,playerHealthRect.y+15);
-        	}
-        	
-        	if(bowResetValue>=0) {
-        		bufferGraphics.setColor(new Color(bowResetValue,1f-bowResetValue,1f-bowResetValue));
-        		bufferGraphics.fillRect(0,captureRect.height,(int)(captureRect.width*bowResetValue), 25);
-        	}
-        	
-        	if(macroTickValue>=0) {
-        		bufferGraphics.setColor(new Color(macroTickValue,1f-macroTickValue,1f-macroTickValue));
-        		bufferGraphics.fillRect(0,captureRect.height+25,(int)(captureRect.width*macroTickValue), 25);
-        	}
-        	
-        	bufferGraphics.setColor(Color.yellow);
-        	bufferGraphics.drawString("Captured Length: ", captureRect.width+1, 50);
-        	bufferGraphics.drawString(traningData.getDataCount()+"", captureRect.width+100, 65);
-        	
-        	bufferGraphics.drawString(connected==true?"Connected":"Not Connected",captureRect.width+1, 90);
-        	
-        	bufferGraphics.drawString(isRecordLocked==true?"Not Recording":"Recording",captureRect.width+1, 115);
-        	bufferGraphics.drawString("Bow Reset Prob: "+(int)(rndBowResetProb*100f)+"%",captureRect.width+1, 140);
-        	
-        	int rndEnemyHealthDown = 550;
-        	bufferGraphics.setColor(Color.green);
-	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*rndEnemyHealth), 25);
-	    	bufferGraphics.setColor(Color.red);
-	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndEnemyHealth),enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*(1f-rndEnemyHealth)), 25);
-	    	bufferGraphics.setColor(Color.black);
-        	bufferGraphics.drawString((rndEnemyHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndEnemyHealthDown);
-        	bufferGraphics.setColor(Color.white);
-        	bufferGraphics.drawString(": Enemy Health", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndEnemyHealthDown);
-        	
-        	int rndPlayerHealthDown = 600;
-        	bufferGraphics.setColor(Color.green);
-	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*rndPlayerHealth), 25);
-	    	bufferGraphics.setColor(Color.red);
-	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndPlayerHealth),enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*(1f-rndPlayerHealth)), 25);
-	    	bufferGraphics.setColor(Color.black);
-        	bufferGraphics.drawString((rndPlayerHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndPlayerHealthDown);
-        	bufferGraphics.setColor(Color.white);
-        	bufferGraphics.drawString(": Player Health", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndPlayerHealthDown);
-        	
-        	int rndBowResetValueDown = 650;
-        	if(rndBowResetValue!=-1) {
-        		bufferGraphics.setColor(Color.magenta);
-		    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-rndBowResetValue)), 25);
-		    	bufferGraphics.setColor(Color.orange);
-		    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-rndBowResetValue)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(rndBowResetValue)), 25);
-		    	bufferGraphics.setColor(Color.black);
-	        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
-	        	bufferGraphics.setColor(Color.white);
-	        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
-        	}
-        	else {
-        		bufferGraphics.setColor(Color.magenta);
-		    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-0)), 25);
-		    	bufferGraphics.setColor(Color.orange);
-		    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-0)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(0)), 25);
-		    	bufferGraphics.setColor(Color.black);
-	        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
-	        	bufferGraphics.setColor(Color.white);
-	        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
-        	}
-        	
-        	Rectangle button = comboRect;
-        	bufferGraphics.setColor(Color.red);
-	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
-	    	bufferGraphics.setColor(Color.white);
-        	bufferGraphics.drawString("COMBO", button.x+20,button.y+50);
-        	
-	    	button = eatRect;
-        	bufferGraphics.setColor(Color.magenta);
-	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
-	    	bufferGraphics.setColor(Color.white);
-        	bufferGraphics.drawString("EAT", button.x+20,button.y+50);
+    	bufferGraphics.setColor(new Color(150,120,160));
+    	bufferGraphics.fillRect(0, 525, 1000, 190);
+    	
+    	bufferGraphics.setColor(new Color(150,120,160));
+    	bufferGraphics.fillRect(0, 740, 1000, 190);
 
-	    	button = noneRect;
-        	bufferGraphics.setColor(Color.orange);
-	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString("--------------------Data Collection Panel--------------------", 10, 515);
+    	
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString("--------------------Combat Status Tracking Panel--------------------", 10, 730);
+    	
+		if(enemyHealth>=0) {
+	    	bufferGraphics.setColor(Color.green);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y,(int)(enemyHealthRect.width*enemyHealth), 25);
+	    	bufferGraphics.setColor(Color.red);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*enemyHealth),enemyHealthRect.y,(int)(enemyHealthRect.width*(1f-enemyHealth)), 25);
 	    	bufferGraphics.setColor(Color.black);
-        	bufferGraphics.drawString("NONE", button.x+20,button.y+50);
-	    	
-        	button = removeRect;
-        	bufferGraphics.setColor(Color.GRAY);
-	    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
-	    	bufferGraphics.setColor(Color.white);
-        	bufferGraphics.drawString("REMOVE LAST DATA", button.x+30,button.y+25);
+        	bufferGraphics.drawString((enemyHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15);
     	}
+    	
+    	if(playerHealth>=0) {
+	    	bufferGraphics.setColor(Color.green);
+	    	bufferGraphics.fillRect(playerHealthRect.x,playerHealthRect.y,(int)(enemyHealthRect.width*playerHealth), 25);
+	    	bufferGraphics.setColor(Color.red);
+	    	bufferGraphics.fillRect(playerHealthRect.x+(int)(enemyHealthRect.width*playerHealth),playerHealthRect.y,(int)(enemyHealthRect.width*(1f-playerHealth)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((playerHealth*100f)+"%", playerHealthRect.x+25,playerHealthRect.y+15);
+    	}
+    	
+    	if(bowResetValue>=0) {
+    		bufferGraphics.setColor(new Color(bowResetValue,1f-bowResetValue,1f-bowResetValue));
+    		bufferGraphics.fillRect(0,captureRect.height,(int)(captureRect.width*bowResetValue), 25);
+    	}
+    	
+    	if(macroTickValue>=0) {
+    		bufferGraphics.setColor(new Color(macroTickValue,1f-macroTickValue,1f-macroTickValue));
+    		bufferGraphics.fillRect(0,captureRect.height+25,(int)(captureRect.width*macroTickValue), 25);
+    	}
+    	
+    	bufferGraphics.setColor(Color.yellow);
+    	bufferGraphics.drawString("Captured Length: ", captureRect.width+1, 50);
+    	bufferGraphics.drawString(traningData.getDataCount()+"", captureRect.width+100, 65);
+    	
+    	bufferGraphics.drawString(connected==true?"Connected":"Not Connected",captureRect.width+1, 90);
+    	
+    	bufferGraphics.drawString(isRecordLocked==true?"Not Recording":"Recording",captureRect.width+1, 115);
+    	bufferGraphics.drawString("Bow Reset Prob: "+(int)(rndBowResetProb*100f)+"%",captureRect.width+1, 140);
+    	
+    	int rndEnemyHealthDown = 500;
+    	bufferGraphics.setColor(Color.green);
+    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*rndEnemyHealth), 25);
+    	bufferGraphics.setColor(Color.red);
+    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndEnemyHealth),enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*(1f-rndEnemyHealth)), 25);
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.drawString((rndEnemyHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndEnemyHealthDown);
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString(": Enemy Health Data", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndEnemyHealthDown);
+    	
+    	int rndPlayerHealthDown = 550;
+    	bufferGraphics.setColor(Color.green);
+    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*rndPlayerHealth), 25);
+    	bufferGraphics.setColor(Color.red);
+    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*rndPlayerHealth),enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*(1f-rndPlayerHealth)), 25);
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.drawString((rndPlayerHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndPlayerHealthDown);
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString(": Player Health Data", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndPlayerHealthDown);
+    	
+    	int rndBowResetValueDown = 600;
+    	if(rndBowResetValue!=-1) {
+    		bufferGraphics.setColor(Color.magenta);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-rndBowResetValue)), 25);
+	    	bufferGraphics.setColor(Color.orange);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-rndBowResetValue)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(rndBowResetValue)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
+        	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
+    	}
+    	else {
+    		bufferGraphics.setColor(Color.magenta);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-0)), 25);
+	    	bufferGraphics.setColor(Color.orange);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-0)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(0)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((rndBowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
+        	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString(": Bow Reset Data", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
+    	}
+    	
+    	Rectangle button = comboRect;
+    	bufferGraphics.setColor(Color.red);
+    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString("COMBO", button.x+20,button.y+50);
+    	
+    	button = eatRect;
+    	bufferGraphics.setColor(Color.magenta);
+    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString("EAT", button.x+20,button.y+50);
+
+    	button = noneRect;
+    	bufferGraphics.setColor(Color.orange);
+    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.drawString("NONE", button.x+20,button.y+50);
+    	
+    	button = removeRect;
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.fillRect(button.x,button.y,button.width, button.height); 
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString("REMOVE LAST DATA", button.x+30,button.y+25);
+    	
+    	
+    	
+    	int w = 505;
+    	int h = 304;
+    	int[] colorRaster = new int[w*h];
+    	cap.getRGB(0, 0, w, h, colorRaster, 0, w);
+    	ArrayList<TrackedEnemy> enemyHpBars =  new ArrayList<TrackedEnemy>();
+    	for(int i = 0; i <h;i++) {
+    		for(int j = 0; j <w;j++) {
+    			int intColor = colorRaster[i*w + j];
+    			
+        		if(( intColor==0xFFFF0000) || (intColor==0xFF00FF00 )) {
+        			boolean found = false;
+        			for(int k = 0; k<enemyHpBars.size();k++) {
+        				if(enemyHpBars.get(k).contains(j,i) == true) {
+        					
+        					found = true;
+        					break;
+        				}
+        			}
+        			if(found == false) {
+        				TrackedEnemy newEnemy = new TrackedEnemy(new Rectangle(j,i,30,5));
+        				enemyHpBars.add(newEnemy);
+        				
+        				int xend = j;
+        				if(w-xend<=30) {
+        					newEnemy.isEnemy = false;
+        				}
+        				else {
+        					for(int k = j;k<j+30;k++) {
+        						intColor = colorRaster[i*w + k];
+        						if(intColor==0xFFFF0000) {
+        							newEnemy.redCount ++;
+        						}
+        						else /*if (intColor==0xFF00FF00 )*/ {
+        							newEnemy.greenCount ++;
+        						}
+        					}
+        				}
+        				
+        				newEnemy.hp = newEnemy.greenCount/(newEnemy.greenCount+newEnemy.redCount);
+        				
+        				if(w-j <=30)
+        					break;
+        				else 
+        					j+=30;
+        			}
+        		}
+        	}
+    	}
+    	
+    	if(enemyHpBars.size()>0) {
+    		
+    		TrackedEnemy fightingThis = null;
+    		float lowestSub = 1000f;
+    		
+    		for(int k = 0; k<enemyHpBars.size();k++) {
+    			TrackedEnemy enemy = enemyHpBars.get(k);
+    			bufferGraphics.setColor(Color.black);
+    			bufferGraphics.fillRect(enemy.rect.x,enemy.rect.y,enemy.rect.width, enemy.rect.height); 
+    			if(enemy.isEnemy == true) {
+    				bufferGraphics.setColor(Color.red);
+    				bufferGraphics.drawRect(enemy.rect.x,enemy.rect.y,enemy.rect.width, 30);
+    				bufferGraphics.setColor(Color.green);
+    				bufferGraphics.drawString((Math.round((enemy.hp*100f) * 100.0f) / 100.0f)+"", enemy.rect.x+5,enemy.rect.y-2);
+    				
+    				if(Math.abs(enemy.hp-enemyHealth)<lowestSub &&
+    						enemy.rect.x<w/2-15 || enemy.rect.x>w/2+17 ) {
+    					fightingThis = enemy;
+    					lowestSub = Math.abs(enemy.hp-enemyHealth);
+    				}
+    			}	
+    			else { 
+    				bufferGraphics.setColor(Color.green);
+    				bufferGraphics.drawRect(enemy.rect.x,enemy.rect.y,enemy.rect.width, 30);
+    			}
+			}
+    		
+    		if(enemyHealth>0f && fightingThis!=null) {
+    			bufferGraphics.setColor(Color.yellow);
+				bufferGraphics.drawRect(fightingThis.rect.x-4,fightingThis.rect.y-4,fightingThis.rect.width+8, 30+8);
+				enemyPosition.x = (int)fightingThis.rect.x + fightingThis.rect.width/2;
+				enemyPosition.y = (int)fightingThis.rect.y+ 15 ;
+    		}
+    		
+    		
+    	}
+    		
+    	
+    	if(enemyHealth>0f) {
+    		bufferGraphics.setColor(Color.red);
+	    	bufferGraphics.fillRect(enemyPosition.x-2,enemyPosition.y-2,4,4); 
+    	}
+    	
+    	
+    	int counter = 0;
+    	for(int i =0; i <7;i++) {
+       		 for(int j =0; j <4;j++) {
+       			 counter++;
+       			 if(counter >ignoreInventorySlots) {
+       				 
+   	    			 int x1 = inventoryIndex.x+(j*41)+3;
+   	    			 int y1 =(int)(inventoryIndex.y+(i*36f))-2;
+   	    			 int intColor1 =cap.getRGB(x1, y1);
+   	    			 int red1 = (intColor1>>16)&0xFF;
+   		        	 int green1 = (intColor1>>8)&0xFF;
+   		        	 int blue1 = (intColor1>>0)&0xFF;
+   		        	 float[] hsb1 = new float[3];
+   		        	 Color.RGBtoHSB(red1, green1, blue1, hsb1);
+   		        	
+   		        	 if((hsb1[2]*100f)>=33f) {
+   		        		bufferGraphics.setColor(Color.green);
+   		        	 }
+   		        	 else {
+   		        		bufferGraphics.setColor(Color.red);
+   		        	 } 
+   		        		
+   		        	bufferGraphics.drawRect(x1,y1,10,10);
+       			 }
+       		 }
+    	}
+    	
+    	bufferGraphics.setColor(comboActionNet.tick());
+    	bufferGraphics.fillRect(comboActionNet.rect.x,comboActionNet.rect.y, 
+    			comboActionNet.rect.width, comboActionNet.rect.height);
+    	bufferGraphics.setColor(eatActionNet.tick());
+    	bufferGraphics.fillRect(eatActionNet.rect.x,eatActionNet.rect.y, 
+    			eatActionNet.rect.width, eatActionNet.rect.height);
+    	bufferGraphics.setColor(noneActionNet.tick());
+    	bufferGraphics.fillRect(noneActionNet.rect.x,noneActionNet.rect.y, 
+    			noneActionNet.rect.width, noneActionNet.rect.height);
+    	
+    	
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.drawString(comboActionNet.buttonName, 
+    			comboActionNet.rect.x+comboActionNet.rect.width/4,
+    			comboActionNet.rect.y+comboActionNet.rect.height/2);
+    	
+    	bufferGraphics.drawString(eatActionNet.buttonName, 
+    			eatActionNet.rect.x+eatActionNet.rect.width/4,
+    			eatActionNet.rect.y+eatActionNet.rect.height/2);
+    	
+    	bufferGraphics.drawString(noneActionNet.buttonName, 
+    			noneActionNet.rect.x+noneActionNet.rect.width/4,
+    			noneActionNet.rect.y+noneActionNet.rect.height/2);
+    	
+    	bufferGraphics.setColor(Color.red);
+    	if(comboActionNet.isAnimating() == true)
+    		bufferGraphics.drawRect(comboActionNet.rect.x,comboActionNet.rect.y, 
+        			comboActionNet.rect.width, comboActionNet.rect.height);	
+    	
+    	if(eatActionNet.isAnimating() == true)
+    		bufferGraphics.drawRect(eatActionNet.rect.x,eatActionNet.rect.y, 
+    				eatActionNet.rect.width, eatActionNet.rect.height);	
+    	
+    	if(noneActionNet.isAnimating() == true)
+    		bufferGraphics.drawRect(noneActionNet.rect.x,noneActionNet.rect.y, 
+    				noneActionNet.rect.width, noneActionNet.rect.height);	
+    	
+    	
+    	
+    	rndEnemyHealthDown = 550+200;
+    	bufferGraphics.setColor(Color.green);
+    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*enemyHealth), 25);
+    	bufferGraphics.setColor(Color.red);
+    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*enemyHealth),enemyHealthRect.y+rndEnemyHealthDown,(int)(enemyHealthRect.width*(1f-enemyHealth)), 25);
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.drawString((enemyHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndEnemyHealthDown);
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString(": Enemy Health", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndEnemyHealthDown);
+    	
+    	rndPlayerHealthDown = 550+250;
+    	bufferGraphics.setColor(Color.green);
+    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*playerHealth), 25);
+    	bufferGraphics.setColor(Color.red);
+    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*playerHealth),enemyHealthRect.y+rndPlayerHealthDown,(int)(enemyHealthRect.width*(1f-playerHealth)), 25);
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.drawString((playerHealth*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndPlayerHealthDown);
+    	bufferGraphics.setColor(Color.white);
+    	bufferGraphics.drawString(": Player Health", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndPlayerHealthDown);
+    	
+    	rndBowResetValueDown = 550+300;
+    	if(bowResetValue!=-1) {
+    		bufferGraphics.setColor(Color.magenta);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-bowResetValue)), 25);
+	    	bufferGraphics.setColor(Color.orange);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-bowResetValue)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(bowResetValue)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((bowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
+        	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
+    	}
+    	else {
+    		bufferGraphics.setColor(Color.magenta);
+	    	bufferGraphics.fillRect(enemyHealthRect.x,enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(1f-0)), 25);
+	    	bufferGraphics.setColor(Color.orange);
+	    	bufferGraphics.fillRect(enemyHealthRect.x+(int)(enemyHealthRect.width*(1f-0)),enemyHealthRect.y+rndBowResetValueDown,(int)(enemyHealthRect.width*(0)), 25);
+	    	bufferGraphics.setColor(Color.black);
+        	bufferGraphics.drawString((bowResetValue*100f)+"%", enemyHealthRect.x+25,enemyHealthRect.y+15+rndBowResetValueDown);
+        	bufferGraphics.setColor(Color.white);
+        	bufferGraphics.drawString(": Bow Reset", enemyHealthRect.x+25+100,enemyHealthRect.y+15+rndBowResetValueDown);
+    	}
+    	
+    	rndPlayerHealthDown = 550+250;
+    	bufferGraphics.setColor(Color.black);
+    	bufferGraphics.drawString("3->512->512->256->256->128->128->64->64->32->32->8->8->3", enemyHealthRect.x+275,enemyHealthRect.y+15+rndPlayerHealthDown);
+    	
+    }
+    
+    
+    public Point getFoodPosition() {
+    	int counter      = 0;
+		Point foundPoint = null;
+		
+		//Iterate through 28 inventory slots
+		for(int i =0; i <7;i++) {
+    		 for(int j =0; j <4;j++) {
+    			 counter++;
+    			 if(counter >ignoreInventorySlots) {
+    				 int x1 = inventoryIndex.x+(j*41)+3;
+   	    			 int y1 =(int)(inventoryIndex.y+(i*36f))-2;
+   	    			 int intColor1 =cap.getRGB(x1, y1);
+   	    			 int red1 = (intColor1>>16)&0xFF;
+   		        	 int green1 = (intColor1>>8)&0xFF;
+   		        	 int blue1 = (intColor1>>0)&0xFF;
+   		        	 float[] hsb1 = new float[3];
+   		        	 Color.RGBtoHSB(red1, green1, blue1, hsb1);
+		        	 
+		        	 if(hsb1[2]*100f>=33f) {
+		        		 foundPoint = new Point(x1,y1);
+		        		 break;
+		        	 }
+    			 }
+    		 }
+    		 
+    		 if(foundPoint!=null)
+    			 break;
+		}
+		
+		
+		if(foundPoint!=null) {
+			foundPoint.x+=captureRect.x;
+			foundPoint.y+=captureRect.y;
+			return foundPoint;
+		}
+		
+    	return null;
     }
     
     public float bowResetValue() {
@@ -463,7 +726,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     	 //sector area of circle
     	 playerHPPercent = (float) ((float) ((13f*13f)*Math.acos((13f-height)/13f)-(13f-height)*(Math.sqrt(2*13f*height-(height*height))))/(Math.PI*13f*13f));
     	 
-    	 this.playerHealth = (float)Math.pow(playerHPPercent,1.1f);
+    	 this.playerHealth = (float)Math.pow(playerHPPercent,1.275f);
     	 
     	 return playerHPPercent;
     }
@@ -522,47 +785,11 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     }
     
     public Point getEnemyPosition() {
+    	
     	return new Point(enemyPosition.x+captureRect.x,enemyPosition.y+captureRect.y);
     }
     
-    public Point getFoodPosition() {
-    	int counter      = 0;
-		Point foundPoint = null;
-		
-		//Iterate through 28 inventory slots
-		for(int i =0; i <7;i++) {
-    		 for(int j =0; j <4;j++) {
-    			 counter++;
-    			 if(counter >ignoreInventorySlots) {
-	    			 int x = inventoryIndex.x+(j*41);
-	    			 int y =(int)(inventoryIndex.y+(i*36f));
-	    			 int intColor =cap.getRGB(x, y);
-	    			 int red = (intColor>>16)&0xFF;
-		        	 int green = (intColor>>8)&0xFF;
-		        	 int blue = (intColor>>0)&0xFF;
-		        	 float[] hsb = new float[3];
-		        	 Color.RGBtoHSB(red, green, blue, hsb);
-		        	 
-		        	 if(Math.abs(20f-(hsb[0]*239f))>2) {
-		        		 foundPoint = new Point(x,y);
-		        		 break;
-		        	 }
-    			 }
-    		 }
-    		 
-    		 if(foundPoint!=null)
-    			 break;
-		}
-		
-		
-		if(foundPoint!=null) {
-			foundPoint.x+=captureRect.x;
-			foundPoint.y+=captureRect.y;
-			return foundPoint;
-		}
-		
-    	return null;
-    }
+    
     
     public Point getWeaponPosition() {
     	return new Point(inventoryIndex.x+captureRect.x,inventoryIndex.y+captureRect.y);
@@ -578,18 +805,32 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     }
     
     public void initilizePosition() {
-    	captureRect      = new Rectangle(105,47,725,460);
+    	//--------CHANGE THIS----------
+    	/** You have to do some trial and error to figure out the correct location.
+    	 *  IF you did do it correctly. When you fight enemies their health should 
+    	 *  be tracked correctly
+    	 */
+    	int x = 105;
+    	int y = 47;
+    	//-------------------------------
+    	
+    	
+    	
+    	captureRect      = new Rectangle(x,y,725,460); 
     	enemyHealthRect  = new Rectangle(5, 36, 121, 1);
     	inventoryIndex   = new Point(578,225);
     	enemyPosition    = new Point(213,167);
     	playerHealthRect = new Rectangle(543,42,7,26);
     	bowDamageRect    = new Rectangle (445,195,1,1);
     	
-    	comboRect = new Rectangle(enemyHealthRect.x+300,enemyHealthRect.y+600,100, 100);
-    	eatRect = new Rectangle(enemyHealthRect.x+420,enemyHealthRect.y+600,100, 100);
-    	noneRect = new Rectangle(enemyHealthRect.x+540,enemyHealthRect.y+600,100, 100);
-    	removeRect = new Rectangle(enemyHealthRect.x+420-50,enemyHealthRect.y+719,200, 50);
+    	comboRect = new Rectangle(enemyHealthRect.x+300,enemyHealthRect.y+500,100, 100);
+    	eatRect = new Rectangle(enemyHealthRect.x+420,enemyHealthRect.y+500,100, 100);
+    	noneRect = new Rectangle(enemyHealthRect.x+540,enemyHealthRect.y+500,100, 100);
+    	removeRect = new Rectangle(enemyHealthRect.x+420-50,enemyHealthRect.y+619,200, 50);
     	
+    	comboActionNet = new AnimateButton(new Rectangle(750,750,100,50),Color.orange,new Color(160, 32, 240),0.015f,"COMBO");
+    	eatActionNet = new AnimateButton(new Rectangle(750,810,100,50),Color.orange,new Color(160, 32, 240),0.015f,"EAT");
+    	noneActionNet = new AnimateButton(new Rectangle(750,870,100,50),Color.orange,new Color(160, 32, 240),0.015f,"NONE");
     }
     
     public RS_ML_v2()   { 
@@ -608,7 +849,7 @@ public class RS_ML_v2 extends JFrame implements Runnable, NativeKeyListener, Mou
     	
 	    font = new Font ("Monospaced", Font.BOLD , 14);
 	    
-        dim = new Dimension(900,900); 
+        dim = new Dimension(900,950); 
         this.setSize(dim);
         //this.resize(dim); 
         this.setLayout(null); 
